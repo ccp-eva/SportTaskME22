@@ -703,7 +703,7 @@ if __name__ == "__main__":
     # Log file
     log_folder = os.path.join(working_folder, 'logs')
     os.makedirs(log_folder, exist_ok=True)
-    log = setup_logger('my_log', os.path.join(working_folder, log_folder, '%s.log' % (datetime.datetime.now().strftime("%d-%m-%Y_%H-%M"))))
+    log = setup_logger('my_log', os.path.join(log_folder, '%s.log' % (datetime.datetime.now().strftime("%d-%m-%Y_%H-%M"))))
     
     # Prepare work tree (respect levels for correct extraction of the frames)
     make_work_tree(working_folder, source_folder, log=log)

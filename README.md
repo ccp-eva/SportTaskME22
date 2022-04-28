@@ -32,9 +32,16 @@ We consider 21 classes for the classification task and 2 classes for the detecti
 This repository is not meant to lead to good performance but to provide a skeleton of a method to help the participants. The workflow is based on OpenCV and PyTorch. The requierment are provided in the [environment.yml file](environment.yml). TODO: add file
 
 ## Download data, export env and run the baseline
-<!-- ```
+<!--
+For organizers:
+```
+# to create md5sums files:
+find -type f -exec md5sum "{}" + > MD5SUMS
+# to create environment.yml
 conda env export --name torch_env --from-history --file environment.yml
-``` -->
+```
+-->
+
 Please wisit [ANACONDA website](https://www.anaconda.com/) for its installation in order to replicate the running enviroment. 
 Then, use the following commands to clone this repo, download the data (replace `USER` and `PASSWORD`) and install the required conda environment.
 We also advise to use [screen](https://www.gnu.org/software/screen/manual/screen.html) to manage your terminals and be able to run processes in the backgroud.
@@ -45,6 +52,10 @@ git clone https://github.com/ccp-eva/SportTaskME22.git
 cd SportTaskME22
 # Download data in repo
 wget --user USER --password "PASSWORD" -r -np -nH --cut-dirs=4 https://www.labri.fr/projet/AIV/MediaEval/2022/data/
+# Check download is correct
+cd data/
+md5sum -c MD5SUMS
+cd ..
 # Create the conda environment
 conda env create --prefix ./env --file environment.yml
 # Activate the conda environment
