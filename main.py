@@ -23,7 +23,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[640,320,98], cuda=True, batch_size=2, workers=0, epochs=1000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[640,360,96], cuda=True, batch_size=2, workers=2, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -67,15 +67,15 @@ class My_dataset_temporal(Dataset):
         self.my_stroke = my_stroke
         self.size_data = size_data
         self.augmentation = augmentation
-        self.number_of_iteration = max(my_stroke.end-my_stroke.begin-size_data[0], 0)
+        self.number_of_iteration = max(my_stroke.end-my_stroke.begin-size_data[2], 0)
 
     def __len__(self):
         return self.number_of_iteration
 
     def __getitem__(self, idx):
         begin = self.my_stroke.begin + idx
-        rgb = get_data(self.my_stroke.video_path, begin, begin+self.size_data[0], self.size_data, self.augmentation)
-        sample = {'rgb': torch.FloatTensor(rgb), 'label': self.my_stroke.move, 'my_stroke': {'video_path': self.my_stroke.video_path, 'begin': begin, 'end': begin + self.size_data[0]}}
+        rgb = get_data(self.my_stroke.video_path, begin, begin+self.size_data[2], self.size_data, self.augmentation)
+        sample = {'rgb': torch.FloatTensor(rgb), 'label': self.my_stroke.move, 'my_stroke': {'video_path': self.my_stroke.video_path, 'begin': begin, 'end': begin + self.size_data[2]}}
         return sample
 
     def my_print(self, show_option=1):
@@ -130,20 +130,20 @@ def get_augmentation_parameters(begin, end, size_data):
     '''
     angle = (random.random()* 2 - 1) * 10
     zoom = 1 + (random.random()* 2 - 1) * 0.1
-    tx = random.randint(-0.1 * size_data[2], 0.1 * size_data[2])
+    tx = random.randint(-0.1 * size_data[0], 0.1 * size_data[0])
     ty = random.randint(-0.1 * size_data[1], 0.1 * size_data[1])
     flip = random.randint(0,1)
 
     # Normal distribution to pick where to begin #
-    mu = begin + (end + 1 - begin - size_data[0])/2
-    sigma = (end + 1 - begin - size_data[0])/6
+    mu = begin + (end + 1 - begin - size_data[2])/2
+    sigma = (end + 1 - begin - size_data[2])/6
     begin = -1
 
     if sigma <= 0:
         begin = int(mu)
     else:
         count=0
-        while not begin <= begin <= end + 1 - size_data[0]:
+        while not begin <= begin <= end + 1 - size_data[2]:
             begin = int(np.random.normal(mu, sigma))
             count+=1
             if count>100:
@@ -154,25 +154,25 @@ def get_data(data_path, begin, end, size_data, augmentation):
     rgb_data = []
     if augmentation:
         angle, zoom, tx, ty, flip, begin = get_augmentation_parameters(begin, end, size_data)
-        R_matrix = cv2.getRotationMatrix2D((size_data[1]//2-tx, size_data[2]//2-ty), angle, 1)
+        R_matrix = cv2.getRotationMatrix2D((size_data[0]//2-tx, size_data[1]//2-ty), angle, 1)
     else:
-        angle, zoom, tx, ty, flip, begin = 0, 1, 0, 0, 0, max((begin+end-size_data[0])//2,0)
+        angle, zoom, tx, ty, flip, begin = 0, 1, 0, 0, 0, max((begin+end-size_data[2])//2,0)
     
     max_frame_number = len(os.listdir(data_path))-1
 
-    for frame_number in range(begin, begin + size_data[0]):
+    for frame_number in range(begin, begin + size_data[2]):
         if frame_number > max_frame_number:
             frame_number = max_frame_number
         try:
             rgb = cv2.imread(os.path.join(data_path, '%08d.png' % frame_number))
-            rgb = cv2.resize(rgb, (size_data[1], size_data[2])).astype(float) / 255
+            rgb = cv2.resize(rgb, (size_data[0], size_data[1])).astype(float) / 255
             if augmentation:
                 rgb = apply_augmentation(rgb, zoom, R_matrix, flip)
         except:
-            raise ValueError('Problem with %s begin %d size %d' % (os.path.join(data_path, '%08d.png' % frame_number), begin, size_data[0]))
+            raise ValueError('Problem with %s begin %d size %s' % (os.path.join(data_path, '%08d.png' % frame_number), begin, str(size_data)))
         rgb_data.append(cv2.split(rgb))
-
-    rgb_data = np.transpose(rgb_data, (1, 0, 2, 3))
+    # To match size_data variable, transposition is needed. From (T,C,H,W) to (C,W,H,T).
+    rgb_data = np.transpose(rgb_data, (1, 3, 2, 0))
     return rgb_data
 
 '''
@@ -452,9 +452,9 @@ def infer_stroke_list_from_vector(video_path, vector_decision, threshold=30):
 
 def compute_strokes_from_predictions(video_path, all_probs, size_data, window_decision=100):
     # Repeat the first and last prediction to center all predictions #
-    predictions = [all_probs[0]]*size_data[0]
+    predictions = [all_probs[0]]*size_data[2]
     predictions.extend(all_probs)
-    predictions.extend(all_probs[-1]*size_data[0])
+    predictions.extend(all_probs[-1]*size_data[2])
 
     # Vote decision #
     vote_list = [[1. if prob == max(probs) else 0 for prob in probs] for probs in predictions]
