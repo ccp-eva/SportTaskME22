@@ -215,7 +215,7 @@ class AttentionModule3D(nn.Module):
         return out_last
 
 class CCNAttentionNet(nn.Module):
-    def __init__(self, channels, size_data, filters=[8,16,32,64,128], linear_dim=1000, cuda=True):
+    def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True):
         super(CCNAttentionNet, self).__init__()
 
         self.convs = []
@@ -227,14 +227,17 @@ class CCNAttentionNet(nn.Module):
             else:
                 pool_size = [2,2,2]
                 pool_stride = [2,2,2]
-            self.convs.append(BlockConvReluPool3D(channels, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
+            self.convs.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
-            channels = out_dim
-            self.attentions.append(AttentionModule3D(channels, channels, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
+            in_dim = out_dim
+            self.attentions.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
 
 
-        self.linear = nn.Linear(size_data[0]*size_data[1]*size_data[2]*channels, linear_dim)
+        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, 5)
         self.activation = nn.ReLU()
+
+        self.linear2 = nn.Linear(5, n_classes)
+        self.final = nn.Softmax(1)
 
         ## Use GPU
         if cuda:
@@ -245,5 +248,6 @@ class CCNAttentionNet(nn.Module):
             features = layer(features)
             features = attention(features)
         features = features.view(-1, flatten_features(features))
-        features = self.activation(self.linear(features))
-        return features
+        features = self.activation(self.linear1(features))
+        features = self.linear2(features)
+        return self.final(features)

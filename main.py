@@ -23,7 +23,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[640,320,98], cuda=True, batch_size=10, workers=6, epochs=1000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[640,320,98], cuda=True, batch_size=2, workers=0, epochs=1000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -158,7 +158,7 @@ def get_data(data_path, begin, end, size_data, augmentation):
     else:
         angle, zoom, tx, ty, flip, begin = 0, 1, 0, 0, 0, max((begin+end-size_data[0])//2,0)
     
-    max_frame_number = os.listdir(data_path)-1
+    max_frame_number = len(os.listdir(data_path))-1
 
     for frame_number in range(begin, begin + size_data[0]):
         if frame_number > max_frame_number:
@@ -604,7 +604,7 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     train_strokes, validation_strokes, test_strokes = get_classification_strokes(task_path)
 
     # Model variables
-    args = my_variables(task_name)
+    args = my_variables(working_folder, task_name)
     
     ## Architecture with the output of the lenght of possible classes - (Unknown not counted)
     model = make_architecture(args, len(list_of_strokes)-1)
@@ -646,13 +646,13 @@ def get_annotations(xml_path, data_folder):
     build_negative_strokes(strokes_list)
     return strokes_list
 
-def get_lists_annotations(task_path, data_path):
+def get_lists_annotations(task_source, task_path):
     '''
     Get the split of annotation and construct negative samples
     '''
-    train_strokes = get_annotations(os.path.join(task_path, 'train'), data_path)
-    validation_strokes = get_annotations(os.path.join(task_path, 'validation'), data_path)
-    test_strokes = get_annotations(os.path.join(task_path, 'test'), data_path)
+    train_strokes = get_annotations(os.path.join(task_source, 'train'), os.path.join(task_path, 'train'))
+    validation_strokes = get_annotations(os.path.join(task_source, 'validation'), os.path.join(task_path, 'validation'))
+    test_strokes = get_annotations(os.path.join(task_source, 'test'), os.path.join(task_path, 'test'))
     return train_strokes, validation_strokes, test_strokes
 
 def detection_task(working_folder, source_folder, log=None):
@@ -668,10 +668,10 @@ def detection_task(working_folder, source_folder, log=None):
     task_source = os.path.join(source_folder, task_name)
 
     # Split
-    train_strokes, validation_strokes, test_strokes = get_lists_annotations(task_path, task_source)
+    train_strokes, validation_strokes, test_strokes = get_lists_annotations(task_source, task_path)
 
     # Model variables
-    args = my_variables(task_name)
+    args = my_variables(working_folder, task_name)
 
     # Architecture with the output of the lenght of possible classes - Positive and Negative
     model = make_architecture(args, 2)
