@@ -121,41 +121,43 @@ Similar scripts will be used to compare the test ground truth and your submissio
 
 The submission folder should look like:
 
-<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>
+TODO: add image tree
+
+'<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>'
 For example:
 
-- Team1
-	|- classificationTask
-	|	|- 1
-	|	|  |- <xml_file_from_test_set>
-	|	|
-	|	|- 2
-	|	|  |- <xml_file_from_test_set>
-	|	|
-	|	|- 3
-	|	|  |- <xml_file_from_test_set>
-	|	|
-	|	|- 4
-	|	|  |- <xml_file_from_test_set>
-	|	|
-	|	|- 5
-	|	   |- <xml_file_from_test_set>
-	|
-	|- detectionTask
-		|- 1
-		|  |- <xml_files_from_test_set>
-		|
-		|- 2
-		|  |- <xml_files_from_test_set>
-		|
-		|- 3
-		|  |- <xml_files_from_test_set>
-		|
-		|- 4
-		|  |- <xml_files_from_test_set>
-		|
-		|- 5
-		   |- <xml_files_from_test_set>
+- Team1 <br>
+	|- classificationTask<br>
+	|	|- 1<br>
+	|	|  |- <xml_file_from_test_set><br>
+	|	|<br>
+	|	|- 2<br>
+	|	|  |- <xml_file_from_test_set><br>
+	|	|<br>
+	|	|- 3<br>
+	|	|  |- <xml_file_from_test_set><br>
+	|	|<br>
+	|	|- 4<br>
+	|	|  |- <xml_file_from_test_set><br>
+	|	|<br>
+	|	|- 5<br>
+	|	   |- <xml_file_from_test_set><br>
+	|<br>
+	|- detectionTask<br>
+		|- 1<br>
+		|  |- <xml_files_from_test_set><br>
+		|<br>
+		|- 2<br>
+		|  |- <xml_files_from_test_set><br>
+		|<br>
+		|- 3<br>
+		|  |- <xml_files_from_test_set><br>
+		|<br>
+		|- 4<br>
+		|  |- <xml_files_from_test_set><br>
+		|<br>
+		|- 5<br>
+		   |- <xml_files_from_test_set><br>
 
 Thank you for your participation.
 
