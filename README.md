@@ -123,42 +123,42 @@ The submission folder should look like:
 
 TODO: add image tree
 
-´<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>´
+`<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>`
 
 For example:
 
-- ´Team1´
-	- ´classificationTask´
-	   - ´1´
-	     - ´<xml_file_from_test_set>´
-	   - ´2´
-	     - ´<xml_file_from_test_set>´
-	   - ´3´
-	     - ´<xml_file_from_test_set>´
-	   - ´4´
-	     - ´<xml_file_from_test_set>´
-	   - ´5´
-	     - ´<xml_file_from_test_set>´
-	- ´detectionTask´
-	   - ´1´
-	     - ´<xml_file1_from_test_set>´
-	     - ´<xml_file2_from_test_set>´
+- `Team1`
+	- `classificationTask`
+	   - `1`
+	     - `<xml_file_from_test_set>`
+	   - `2`
+	     - `<xml_file_from_test_set>`
+	   - `3`
+	     - `<xml_file_from_test_set>`
+	   - `4`
+	     - `<xml_file_from_test_set>`
+	   - `5`
+	     - `<xml_file_from_test_set>`
+	- `detectionTask`
+	   - `1`
+	     - `<xml_file1_from_test_set>`
+	     - `<xml_file2_from_test_set>`
 	     - ...
-	   - ´2´
-	     - ´<xml_file1_from_test_set>´
-	     - ´<xml_file2_from_test_set>´
+	   - `2`
+	     - `<xml_file1_from_test_set>`
+	     - `<xml_file2_from_test_set>`
 	     - ...
-	   - ´3´
-	     - ´<xml_file1_from_test_set>´
-	     - ´<xml_file2_from_test_set>´
+	   - `3`
+	     - `<xml_file1_from_test_set>`
+	     - `<xml_file2_from_test_set>`
 	     - ...
-	   - ´4´
-	     - ´<xml_file1_from_test_set>´
-	     - ´<xml_file2_from_test_set>´
+	   - `4`
+	     - `<xml_file1_from_test_set>`
+	     - `<xml_file2_from_test_set>`
 	     - ...
-	   - ´5´
-	     - ´<xml_file1_from_test_set>´
-	     - ´<xml_file2_from_test_set>´
+	   - `5`
+	     - `<xml_file1_from_test_set>`
+	     - `<xml_file2_from_test_set>`
 	     - ...
 
 Thank you for your participation.
