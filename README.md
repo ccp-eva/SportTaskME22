@@ -129,8 +129,8 @@ For example:
 
 - Team1
 	- classificationTask
-	 - 1
-	  - <xml_file_from_test_set><br>
+	   - 1
+	     - <xml_file_from_test_set><br>
 	 - 2
 	|	|  |- <xml_file_from_test_set><br>
 	|	|<br>
