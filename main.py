@@ -23,7 +23,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[640,360,96], model_load=None, cuda=True, batch_size=2, workers=5, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=2, workers=5, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -724,7 +724,7 @@ if __name__ == "__main__":
     log = setup_logger('my_log', os.path.join(log_folder, '%s.log' % (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))))
     
     # Prepare work tree (respect levels for correct extraction of the frames)
-    make_work_tree(working_folder, source_folder, log=log)
+    make_work_tree(working_folder, source_folder, frame_width=320, log=log)
 
     # Tasks
     test_strokes_segmentation = detection_task(working_folder, source_folder, log=log)

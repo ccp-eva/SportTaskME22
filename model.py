@@ -215,28 +215,29 @@ class AttentionModule3D(nn.Module):
         return out_last
 
 class CCNAttentionNet(nn.Module):
-    def __init__(self, size_data, n_classes, in_dim=3, filters=[5,5,5,5,5,5], cuda=True): # filters=[8,16,32,64,128,256]
+    def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True): # filters=[8,16,32,64,128,256]
         super(CCNAttentionNet, self).__init__()
 
-        self.convs = []
-        self.attentions = []
+        self.layers = []
         for idx, out_dim in enumerate(filters):
-            if idx < 2:
+            # First layer, no diminution of dimension on temporal domain
+            if idx == 0:
                 pool_size = [2,2,1]
                 pool_stride = [2,2,1]
             else:
                 pool_size = [2,2,2]
                 pool_stride = [2,2,2]
-            self.convs.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
+            self.layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
             in_dim = out_dim
-            self.attentions.append(1)
-            # self.attentions.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
+            # No attention mechanism on the two last layers
+            if idx>=len(filters)-2:
+                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
 
-        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, 2)
+        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, size_data[0]*size_data[1]*size_data[2]*in_dim/4)
         self.activation = nn.ReLU()
 
-        self.linear2 = nn.Linear(2, n_classes)
+        self.linear2 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim/4, n_classes)
         self.final = nn.Softmax(1)
 
         ## Use GPU
