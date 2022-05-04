@@ -123,11 +123,12 @@ The submission folder should look like:
 
 TODO: add image tree
 
-'<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>'
+´<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>´
+
 For example:
 
 - Team1 <br>
-	|- classificationTask<br>
+	- classificationTask<br>
 	|	|- 1<br>
 	|	|  |- <xml_file_from_test_set><br>
 	|	|<br>
