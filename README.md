@@ -51,7 +51,7 @@ We also advise to use [screen](https://www.gnu.org/software/screen/manual/screen
 git clone https://github.com/ccp-eva/SportTaskME22.git
 cd SportTaskME22
 # Download data in repo
-wget --user USER --password "PASSWORD" -r -np -nH --cut-dirs=4 https://www.labri.fr/projet/AIV/MediaEval/2022/data/
+wget --user=USER --password='PASSWORD' -r -np -nH --cut-dirs=4 https://www.labri.fr/projet/AIV/MediaEval/2022/data/
 # Check download is correct
 cd data/
 md5sum -c MD5SUMS
