@@ -1,0 +1,10 @@
+name: torch_env
+channels:
+  - defaults
+dependencies:
+  - pytorch
+  - torchvision
+  - opencv
+  - scikit-learn
+  - matplotlib
+prefix: /home/pemartin/.conda/envs/torch_env
