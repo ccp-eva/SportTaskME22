@@ -3,70 +3,20 @@ import torch.nn.functional as F
 import numpy as np
 import math
 
-##########################################################################
-########################  Flatten Features  ##############################
-##########################################################################
+
 def flatten_features(x):
-    size = x.size()[1:]  # all dimensions except the batch dimension
+    '''
+    Flatten Features (all dimensions except the batch dimension)
+    '''
+    size = x.size()[1:]
     num_features = 1
     for s in size:
         num_features *= s
     return num_features
 
-# class NetRGB(nn.Module):
-#     def __init__(self, size_data, n_classes=21, attention=False):
-#         super(NetRGB, self).__init__()
-#         self.attention = attention
-#         # RGB
-#         self.conv1_RGB = nn.Conv3d(3, 30, (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)) # dilaion=(0,0,0) (depth, height, width)
-#         self.pool1_RGB = nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2))
-#         size_data //= 2
-#         if self.attention:
-#             self.attention1_RGB = AttentionModule3D(30, 30, size_data, np.ceil(size_data/2), np.ceil(size_data/4))
-
-#         self.conv2_RGB = nn.Conv3d(30, 60, (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)) # dilaion=(0,0,0) (depth, height, width)
-#         self.pool2_RGB = nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2))
-#         size_data //= 2
-#         if self.attention:
-#             self.attention2_RGB = AttentionModule3D(60, 60, size_data, np.ceil(size_data/2), np.ceil(size_data/4))
-
-#         self.conv3_RGB = nn.Conv3d(60, 80, (3, 3, 3), stride=(1, 1, 1), padding=(1, 1, 1)) # dilaion=(0,0,0) (depth, height, width)
-#         self.pool3_RGB = nn.MaxPool3d((2, 2, 2), stride=(2, 2, 2))
-#         size_data //= 2
-#         if self.attention:
-#             self.attention3_RGB = AttentionModule3D(80, 80, size_data, np.ceil(size_data/2), np.ceil(size_data/4))
-
-#         self.linear_RGB = nn.Linear(80*size_data[0]*size_data[1]*size_data[2], 500) # 144000, 216000
-#         self.relu_RGB = nn.ReLU()
-
-#         # Fusion
-#         self.linear = nn.Linear(500, n_classes)
-#         self.final = nn.Softmax(1)
-
-#     def forward(self, rgb, flow, save_outputs=False):
-#         rgb = self.pool1_RGB(F.relu(self.conv1_RGB(rgb))) # rgb = self.pool1_RGB(F.relu(self.drop1_RGB(self.conv1_RGB(rgb))))
-#         if self.attention:
-#             rgb = self.attention1_RGB(rgb)
-
-#         rgb = self.pool2_RGB(F.relu(self.conv2_RGB(rgb)))
-#         if self.attention:
-#             rgb = self.attention2_RGB(rgb)
-
-#         rgb = self.pool3_RGB(F.relu(self.conv3_RGB(rgb)))
-#         if self.attention:
-#             rgb = self.attention3_RGB(rgb)
-
-#         rgb = rgb.view(-1, flatten_features(rgb))
-#         rgb = self.relu_RGB(self.linear_RGB(rgb))
-
-#         rgb = self.linear(rgb)
-#         label = self.final(rgb)
-
-#         return label
-
-###################################################################
-####################### 3D Attention Model  #######################
-###################################################################
+'''
+3D Attention Blocks  
+'''
 class BlockConvReluPool3D(nn.Module):
     def __init__(self, in_dim, out_dim, conv_size=(3,3,3), conv_stride=(1,1,1), conv_padding=(1,1,1), pool_size=(2,2,2), pool_stride=(2,2,2), cuda=True):
         super(BlockConvReluPool3D, self).__init__()
@@ -214,6 +164,9 @@ class AttentionModule3D(nn.Module):
 
         return out_last
 
+'''
+3D Attention Model  
+'''
 class CCNAttentionNet(nn.Module):
     def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True):
         super(CCNAttentionNet, self).__init__()
@@ -230,14 +183,14 @@ class CCNAttentionNet(nn.Module):
             self.layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
             in_dim = out_dim
-            # No attention mechanism on the two last layers (min dim = 2 in this configuration) - (W,H,T)=(5,2,3) 
-            if idx>=len(filters)-2:
-                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, max(1,size_data//2), max(1,size_data//2//2), cuda=cuda))
+            # No attention mechanism on the two last layers (min dim = 2 in this configuration) - (W,H,T)=(5,2,3)
+            if idx<=len(filters)-2:
+                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
         # (W,H,T)=(5,2,3) - lenght features = 7680
-        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, 1024)
+        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, size_data[0]*size_data[1]*size_data[2]*in_dim//4)
         self.activation = nn.ReLU()
 
-        self.linear2 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim/4, n_classes)
+        self.linear2 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim//4, n_classes)
         self.final = nn.Softmax(1)
 
         ## Use GPU

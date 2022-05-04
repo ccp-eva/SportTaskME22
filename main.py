@@ -23,7 +23,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=2, workers=5, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=20, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -44,7 +44,7 @@ class my_variables():
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
-            # os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
         else:
             self.dtype = torch.FloatTensor
         self.log = setup_logger('model_log', os.path.join(self.model_name, 'model.log'))
@@ -96,6 +96,8 @@ class My_stroke:
         self.end = end
         if type(move) is int:
             self.move = move
+        elif move == 'Unknown':
+            self.move = None
         else:
             self.move = list_of_strokes.index(move)
 
@@ -521,7 +523,7 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
 '''
 Set up the environment and extract data
 '''
-def make_work_tree(working_folder, source_folder, frame_width=640, log=None):
+def make_work_tree(working_folder, source_folder, frame_width=320, log=None):
     # Chrono
     start_time = time.time()
     # Get all the videos and extract the frames in the working_folder directory.
@@ -688,7 +690,7 @@ def detection_task(working_folder, source_folder, log=None):
     train_strokes, validation_strokes, test_strokes = get_lists_annotations(task_source, task_path)
 
     # Model variables
-    args = my_variables(working_folder, task_name, model_load="02-05-2022_18-11")
+    args = my_variables(working_folder, task_name)
 
     # Architecture with the output of the lenght of possible classes - Positive and Negative
     model = make_architecture(args, 2)
@@ -702,8 +704,8 @@ def detection_task(working_folder, source_folder, log=None):
     
     # Test process
     load_model(model, args)
-    # test_model(model, args, test_loader)
-    # test_prob_and_vote(model, args, test_strokes)
+    test_model(model, args, test_loader)
+    test_prob_and_vote(model, args, test_strokes)
     list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
     test_videos_segmentation(model, args, list_of_test_videos)
     return list_of_test_videos
@@ -724,10 +726,11 @@ if __name__ == "__main__":
     log = setup_logger('my_log', os.path.join(log_folder, '%s.log' % (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))))
     
     # Prepare work tree (respect levels for correct extraction of the frames)
-    make_work_tree(working_folder, source_folder, frame_width=320, log=log)
+    # make_work_tree(working_folder, source_folder, frame_width=320, log=log)
 
     # Tasks
-    test_strokes_segmentation = detection_task(working_folder, source_folder, log=log)
-    classification_task(working_folder, source_folder, log=log, test_strokes_segmentation=test_strokes_segmentation)
+    # test_strokes_segmentation = detection_task(working_folder, source_folder, log=log)
+    test_strokes_segmentation = get_videos_list(os.path.join(working_folder, 'detectionTask', 'test'))
+    classification_task(working_folder, log=log, test_strokes_segmentation=test_strokes_segmentation)
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
