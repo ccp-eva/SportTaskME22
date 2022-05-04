@@ -215,12 +215,12 @@ class AttentionModule3D(nn.Module):
         return out_last
 
 class CCNAttentionNet(nn.Module):
-    def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True): # filters=[8,16,32,64,128,256]
+    def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True):
         super(CCNAttentionNet, self).__init__()
 
         self.layers = []
         for idx, out_dim in enumerate(filters):
-            # First layer, no diminution of dimension on temporal domain
+            # First layer, no diminution of dimension on temporal domain, double
             if idx == 0:
                 pool_size = [2,2,1]
                 pool_stride = [2,2,1]
@@ -230,11 +230,11 @@ class CCNAttentionNet(nn.Module):
             self.layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
             in_dim = out_dim
-            # No attention mechanism on the two last layers
+            # No attention mechanism on the two last layers (min dim = 2 in this configuration) - (W,H,T)=(5,2,3) 
             if idx>=len(filters)-2:
-                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
-
-        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, size_data[0]*size_data[1]*size_data[2]*in_dim/4)
+                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, max(1,size_data//2), max(1,size_data//2//2), cuda=cuda))
+        # (W,H,T)=(5,2,3) - lenght features = 7680
+        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, 1024)
         self.activation = nn.ReLU()
 
         self.linear2 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim/4, n_classes)
@@ -245,9 +245,8 @@ class CCNAttentionNet(nn.Module):
             self.cuda()
 
     def forward(self, features):
-        for layer, attention in zip(self.convs, self.attentions):
+        for layer in self.layers:
             features = layer(features)
-            # features = attention(features)
         features = features.view(-1, flatten_features(features))
         features = self.activation(self.linear1(features))
         features = self.linear2(features)
