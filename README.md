@@ -55,6 +55,8 @@ wget --user=USER --password='PASSWORD' -r -np -nH --cut-dirs=4 https://www.labri
 # Check download is correct
 cd data/
 md5sum -c MD5SUMS
+# Remove potential index files
+find . -type f -name "index*" -exec rm {} \;
 cd ..
 # Create the conda environment
 conda env create --prefix ./env --file environment.yml
