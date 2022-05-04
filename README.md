@@ -127,12 +127,11 @@ TODO: add image tree
 
 For example:
 
-- Team1 <br>
-	- classificationTask<br>
-	|	|- 1<br>
-	|	|  |- <xml_file_from_test_set><br>
-	|	|<br>
-	|	|- 2<br>
+- Team1
+	- classificationTask
+	 - 1
+	  - <xml_file_from_test_set><br>
+	 - 2
 	|	|  |- <xml_file_from_test_set><br>
 	|	|<br>
 	|	|- 3<br>
