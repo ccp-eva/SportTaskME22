@@ -23,7 +23,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[640,360,96], cuda=True, batch_size=2, workers=2, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[640,360,96], model_load=None, cuda=True, batch_size=2, workers=5, epochs=5, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -35,7 +35,12 @@ class my_variables():
         self.nesterov = nesterov
         self.weight_decay = weight_decay
         self.momentum = momentum
-        self.model_name = os.path.join(working_path, 'Models', task_name, '%s' % (datetime.datetime.now().strftime('%d-%m-%Y_%H-%M')))
+        if model_load is None:
+            self.model_name = os.path.join(working_path, 'Models', task_name, '%s' % (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')))
+            self.train_model = True
+        else:
+            self.model_name = os.path.join(working_path, 'Models', task_name, model_load)
+            self.train_model = False
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
@@ -304,7 +309,6 @@ def validation_epoch(epoch, args, model, data_loader, criterion):
             label = Variable(label.type(args.dtype).long())
             output = model(rgb)
             _loss += criterion(output, label).item()
-            output_indexes = output.data.max(1)[1]
             _acc += output.data.max(1)[1].eq(label.data).cpu().sum().numpy()
 
         _loss /= N
@@ -404,7 +408,7 @@ def test_prob_and_vote(model, args, test_list, list_of_strokes=None):
             predictions = []
             all_probs = []
             test_set = My_dataset_temporal(my_stroke, args.size_data, augmentation=False)
-            test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+            test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
             for batch in test_loader:
                 rgb = batch['rgb']
@@ -417,17 +421,21 @@ def test_prob_and_vote(model, args, test_list, list_of_strokes=None):
                 predictions.extend(predicted.tolist())
 
             middle = int(len(all_probs)/2)
-            prob_gaussian = cv2.GaussianBlur(np.array(all_probs), (1, 2*middle+1), 0)
+            prob_gaussian = cv2.GaussianBlur(np.array(all_probs), (1, 2*middle+1), 0) # sigma = 0.3*((ksize-1)*0.5 - 1) + 0.8
             prob_mean = np.mean(all_probs,0)
 
-            prediction_index_vote = max(set(predictions), key=predictions.count)
-            store_xml_data([my_stroke], [prediction_index_vote], xml_files_vote, list_of_strokes)
-            prediction_index_gaussian = prob_gaussian[middle].tolist().index(max(prob_gaussian[middle]))
-            store_xml_data([my_stroke], [prediction_index_gaussian], xml_files_vote, list_of_strokes)
-            prediction_index_mean = prob_mean.tolist().index(max(prob_mean))
-            store_xml_data([my_stroke], [prediction_index_mean], xml_files_vote, list_of_strokes)
+            # Store results in xml files
+            my_stroke.move = max(set(predictions), key=predictions.count)
+            store_stroke_to_xml([my_stroke], xml_files_vote, list_of_strokes)
+            my_stroke.move = prob_mean.tolist().index(max(prob_mean))
+            store_stroke_to_xml([my_stroke], xml_files_mean, list_of_strokes)
+            my_stroke.move = prob_gaussian[middle].tolist().index(max(prob_gaussian[middle]))
+            store_stroke_to_xml([my_stroke], xml_files_gaussian, list_of_strokes)
 
         progress_bar(len(test_list), len(test_list), 'Window Testing Done', 1, log=args.log)
+        save_xml_data(xml_files_vote, path_xml_save_vote)
+        save_xml_data(xml_files_mean, path_xml_save_mean)
+        save_xml_data(xml_files_gaussian, path_xml_save_gaussian)
     return 1
 
 '''
@@ -454,7 +462,7 @@ def compute_strokes_from_predictions(video_path, all_probs, size_data, window_de
     # Repeat the first and last prediction to center all predictions #
     predictions = [all_probs[0]]*size_data[2]
     predictions.extend(all_probs)
-    predictions.extend(all_probs[-1]*size_data[2])
+    predictions.extend([all_probs[-1]]*size_data[2])
 
     # Vote decision #
     vote_list = [[1. if prob == max(probs) else 0 for prob in probs] for probs in predictions]
@@ -469,7 +477,7 @@ def compute_strokes_from_predictions(video_path, all_probs, size_data, window_de
     mean_strokes = infer_stroke_list_from_vector(video_path, mean_decision)
 
     # Gaussian weights decision #
-    all_probs_gauss = cv2.GaussianBlur(predictions, (1, window_decision+1), 50)
+    all_probs_gauss = cv2.GaussianBlur(np.array(predictions), (1, window_decision+1), 0) # sigma = 0.3*((ksize-1)*0.5 - 1) + 0.8
     gaussian_decision = [probs.tolist().index(max(probs)) for probs in all_probs_gauss]
     gaussian_strokes = infer_stroke_list_from_vector(video_path, gaussian_decision)
 
@@ -481,19 +489,18 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
         path_xml_save_vote = os.path.join(args.model_name, 'xml_testseg_vote')
         os.mkdir(path_xml_save_vote)
         xml_files_mean = {}
-        path_xml_save_mean = os.path.join(args.model_name, 'xml_testseg_vote')
+        path_xml_save_mean = os.path.join(args.model_name, 'xml_testseg_mean')
         os.mkdir(path_xml_save_mean)
         xml_files_gaussian = {}
-        path_xml_save_gaussian = os.path.join(args.model_name, 'xml_testseg_vote')
+        path_xml_save_gaussian = os.path.join(args.model_name, 'xml_testseg_gaussian')
         os.mkdir(path_xml_save_gaussian)
 
         for idx, my_stroke in enumerate(test_list):
             progress_bar(idx, len(test_list), 'Window Testing')
 
-            predictions = []
             all_probs = []
             test_set = My_dataset_temporal(my_stroke, args.size_data, augmentation=False)
-            test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+            test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
             for batch in test_loader:
                 rgb = batch['rgb']
@@ -607,13 +614,14 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     args = my_variables(working_folder, task_name)
     
     ## Architecture with the output of the lenght of possible classes - (Unknown not counted)
-    model = make_architecture(args, len(list_of_strokes)-1)
+    model = make_architecture(args, len(list_of_strokes))
 
     # Loaders
     train_loader, validation_loader, test_loader = get_data_loaders(train_strokes, validation_strokes, test_strokes, args.size_data, args.batch_size, args.workers)
 
     # Training process
-    train_model(model, args, train_loader, validation_loader)
+    if args.train_model:
+        train_model(model, args, train_loader, validation_loader)
     
     # Test process
     load_model(model, args)
@@ -623,10 +631,19 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
         test_videos_segmentation(model, args, test_strokes_segmentation)
     return 1
 
-
 '''
 Detection task
 '''
+def get_videos_list(data_folder):
+    '''
+    Get list of videos and transform it to strokes for segmentation purpose
+    '''
+    video_list = []
+    for video in os.listdir(data_folder):
+        video_path = os.path.join(data_folder, video)
+        video_list.append(My_stroke(video_path, 0, len(os.listdir(video_path)), 0))
+    return video_list
+
 def get_annotations(xml_path, data_folder):
     '''
     Get annotations from xml files located in one folder and produce a list of My_stroke
@@ -671,7 +688,7 @@ def detection_task(working_folder, source_folder, log=None):
     train_strokes, validation_strokes, test_strokes = get_lists_annotations(task_source, task_path)
 
     # Model variables
-    args = my_variables(working_folder, task_name)
+    args = my_variables(working_folder, task_name, model_load="02-05-2022_18-11")
 
     # Architecture with the output of the lenght of possible classes - Positive and Negative
     model = make_architecture(args, 2)
@@ -680,15 +697,16 @@ def detection_task(working_folder, source_folder, log=None):
     train_loader, validation_loader, test_loader = get_data_loaders(train_strokes, validation_strokes, test_strokes, args.size_data, args.batch_size, args.workers)
 
     # Training process
-    train_model(model, args, train_loader, validation_loader)
+    if args.train_model:
+        train_model(model, args, train_loader, validation_loader)
     
     # Test process
     load_model(model, args)
-    test_model(model, args, test_loader)
-    test_prob_and_vote(model, args, test_strokes)
-    test_videos_segmentation(model, args, test_strokes)
-    return test_strokes
-
+    # test_model(model, args, test_loader)
+    # test_prob_and_vote(model, args, test_strokes)
+    list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
+    test_videos_segmentation(model, args, list_of_test_videos)
+    return list_of_test_videos
 
 if __name__ == "__main__":
     # Chrono
@@ -703,7 +721,7 @@ if __name__ == "__main__":
     # Log file
     log_folder = os.path.join(working_folder, 'logs')
     os.makedirs(log_folder, exist_ok=True)
-    log = setup_logger('my_log', os.path.join(log_folder, '%s.log' % (datetime.datetime.now().strftime("%d-%m-%Y_%H-%M"))))
+    log = setup_logger('my_log', os.path.join(log_folder, '%s.log' % (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))))
     
     # Prepare work tree (respect levels for correct extraction of the frames)
     make_work_tree(working_folder, source_folder, log=log)
