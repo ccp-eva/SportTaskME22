@@ -43,7 +43,7 @@ To have access to the data:
 1- register to MediaEval workshop (free) with your **institutional** email address (gmail, gmx, outlook addresses... will not be accepted). See the [MediaEval website](https://multimediaeval.github.io/editions/2022/) to register.
 2- send to the MediaEval organizers the [MediaEval data agreement](https://multimediaeval.github.io/editions/2021/docs/MediaEval2022_UsageAgreement.pdf) filled for our task. Instructions are on the document.
 3- by accessing the data, you agree to the [Particular Conditions](Particular_conditions2022.pdf) of usage of the data.
-To formally accept them, send an email to ![](image1.png) with: « I Accept the TTStroke-21 Particular Conditions 2022 » in the email body.
+To formally accept them, send an email to ![](image1.png) with: « I Accept the Usage Conditions » in the email body.
 
 Once these 3 steps performed, you will receive an username and password to download the data.
 Use the following commands to clone this repo and download the data (replace `USER` and `PASSWORD`).
