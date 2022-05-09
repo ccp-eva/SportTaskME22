@@ -730,7 +730,6 @@ if __name__ == "__main__":
 
     # Tasks
     test_strokes_segmentation = detection_task(working_folder, source_folder, log=log)
-    test_strokes_segmentation = get_videos_list(os.path.join(working_folder, 'detectionTask', 'test'))
     classification_task(working_folder, log=log, test_strokes_segmentation=test_strokes_segmentation)
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
