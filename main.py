@@ -536,6 +536,9 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
             store_stroke_to_xml(gaussian_strokes, xml_files_gaussian, list_of_strokes)
 
         progress_bar(len(test_list), len(test_list), 'Window Testing Done', 1, log=args.log)
+        save_xml_data(xml_files_vote, path_xml_save_vote)
+        save_xml_data(xml_files_mean, path_xml_save_mean)
+        save_xml_data(xml_files_gaussian, path_xml_save_gaussian)
     return 1
 
 
