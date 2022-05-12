@@ -202,7 +202,7 @@ def save_checkpoint(args, model, optimizer, epoch, val_loss):
     torch.save({'epoch': epoch,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'val_loss': loss}, os.path.join(args.model_name, 'checkpoint.pth'))
+        'val_loss': val_loss}, os.path.join(args.model_name, 'checkpoint.pth'))
     print_and_log('Model %s saved' % (args.model_name), log=args.log)
     return 1
 
