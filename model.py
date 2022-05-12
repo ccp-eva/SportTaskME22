@@ -1,3 +1,8 @@
+# Code dedicated to the Sport Task MediaEval22 
+__author__ = "Pierre-Etienne Martin"
+__copyright__ = "Copyright (C) 2022 Pierre-Etienne Martin"
+__license__ = "CC BY 4.0"
+__version__ = "1.0"
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
@@ -168,29 +173,38 @@ class AttentionModule3D(nn.Module):
 3D Attention Model  
 '''
 class CCNAttentionNet(nn.Module):
-    def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True):
+    def __init__(self, size_data, n_classes, in_dim=3, filters=[32,64,128,256,512], cuda=True):
         super(CCNAttentionNet, self).__init__()
-
+        # Per default parameters
+        # pool_size = (2,2,2)
+        # pool_stride = (2,2,2)
+        # conv_size=(3,3,3)
+        # conv_stride=(1,1,1)
+        # conv_padding=(1,1,1)
+        # pool_size=(2,2,2)
         self.layers = []
         for idx, out_dim in enumerate(filters):
             # First layer, no diminution of dimension on temporal domain, double
-            if idx == 0:
-                pool_size = [2,2,1]
-                pool_stride = [2,2,1]
-            else:
+            if idx < 2: 
+                conv_size=(7,5,3)
+                conv_padding=(3,2,1)
+                pool_size=(4,3,2)
+                pool_stride = [4,3,2]
+            else: # To finally have similar dimension:20x20x24
                 pool_size = [2,2,2]
                 pool_stride = [2,2,2]
             self.layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
             in_dim = out_dim
             # No attention mechanism on the two last layers (min dim = 2 in this configuration) - (W,H,T)=(5,2,3)
-            if idx<=len(filters)-2:
-                self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
-        # (W,H,T)=(5,2,3) - lenght features = 7680
-        self.linear1 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim, size_data[0]*size_data[1]*size_data[2]*in_dim//4)
+            self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
+        # (W,H,T)=(3,2,2) - lenght features = 6144
+        size_linear_src = size_data[0]*size_data[1]*size_data[2]*in_dim
+        size_linear_dest = size_linear_src//6
+        self.linear1 = nn.Linear(size_linear_src, size_linear_dest)
         self.activation = nn.ReLU()
 
-        self.linear2 = nn.Linear(size_data[0]*size_data[1]*size_data[2]*in_dim//4, n_classes)
+        self.linear2 = nn.Linear(size_linear_dest, n_classes)
         self.final = nn.Softmax(1)
 
         ## Use GPU

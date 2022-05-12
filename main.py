@@ -1,3 +1,8 @@
+# Code dedicated to the Sport Task MediaEval22 
+__author__ = "Pierre-Etienne Martin"
+__copyright__ = "Copyright (C) 2022 Pierre-Etienne Martin"
+__license__ = "CC BY 4.0"
+__version__ = "1.0"
 import cv2
 import datetime
 import os
@@ -23,7 +28,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=20, workers=10, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=0, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -44,7 +49,7 @@ class my_variables():
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
-            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
         else:
             self.dtype = torch.FloatTensor
         self.log = setup_logger('model_log', os.path.join(self.model_name, 'model.log'))
@@ -708,7 +713,7 @@ def detection_task(working_folder, source_folder, log=None):
     test_prob_and_vote(model, args, test_strokes)
     list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
     test_videos_segmentation(model, args, list_of_test_videos)
-    return list_of_test_videos
+    return 1
 
 if __name__ == "__main__":
     # Chrono
@@ -729,7 +734,7 @@ if __name__ == "__main__":
     make_work_tree(working_folder, source_folder, frame_width=320, log=log)
 
     # Tasks
-    test_strokes_segmentation = detection_task(working_folder, source_folder, log=log)
-    classification_task(working_folder, log=log, test_strokes_segmentation=test_strokes_segmentation)
+    detection_task(working_folder, source_folder, log=log)
+    classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)

@@ -1,3 +1,8 @@
+# Code dedicated to the Sport Task MediaEval22 
+__author__ = "Pierre-Etienne Martin"
+__copyright__ = "Copyright (C) 2022 Pierre-Etienne Martin"
+__license__ = "CC BY 4.0"
+__version__ = "1.0"
 import gc
 import numpy as np
 import torch
