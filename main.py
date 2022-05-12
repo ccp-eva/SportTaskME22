@@ -28,7 +28,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=0, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -198,13 +198,25 @@ def make_architecture(args, output_size):
         model.cuda()
     return model
 
-def save_model(model, args):
-    torch.save(model.state_dict(), os.path.join(args.model_name, 'weights.model'))
+def save_checkpoint(args, model, optimizer, epoch, val_loss):
+    torch.save({'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'val_loss': loss}, os.path.join(args.model_name, 'checkpoint.pth'))
     print_and_log('Model %s saved' % (args.model_name), log=args.log)
+    return 1
 
-def load_model(model, args):
-    model.load_state_dict(torch.load(os.path.join(args.model_name, 'weights.model'), map_location=lambda storage, loc: storage))
+def load_checkpoint(model, args, optimizer=None):
+    checkpoint = torch.load(os.path.join(args.model_name, 'checkpoint.pth'))
+    model.load_state_dict(checkpoint['model_state_dict'], map_location=lambda storage, loc: storage)
+    # model.load_state_dict(checkpoint['model_state_dict'])
+    if optimizer is not None:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    # epoch = checkpoint['epoch']
+    # val_loss = checkpoint['val_loss']
     print_and_log('Model %s loaded' % (args.model_name), log=args.log)
+    return 1
+
 
 def change_lr(optimizer, args, lr):
     for param_group in optimizer.param_groups:
@@ -246,15 +258,17 @@ def train_model(model, args, train_loader, validation_loader):
 
         # Best model saved accoridng to loss
         if loss_val_ < min_loss_val:
-            save_model(model, args)
+            save_checkpoint(args, model, optimizer, epoch, loss_val)
             min_loss_val = loss_val_
             max_acc = acc_val_
             best_epoch = epoch
+            wait_change_lr = 0
 
         # Change lr according to evolution of the loss
         if wait_change_lr > 30:
-            if np.mean(loss_train[-30:-10]) > 0.98*np.mean(loss_train[-10:]):
-                print_and_log("Diff Loss : %g" % (np.mean(loss_train[-20:-10])-np.mean(loss_train[-10:])), log=args.log)
+            if np.mean(loss_train[-30:-10]) > .99*np.mean(loss_train[-10:]):
+                print_and_log("Diff Loss : %g" % (np.mean(loss_train[-30:-10])-np.mean(loss_train[-10:])), log=args.log)
+                load_checkpoint(model, args, optimizer)
                 if args.lr < args.lr_min:
                     change_lr(optimizer, args, args.lr_max)
                 else:
@@ -631,7 +645,7 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
         train_model(model, args, train_loader, validation_loader)
     
     # Test process
-    load_model(model, args)
+    load_checkpoint(model, args)
     test_model(model, args, test_loader, list_of_strokes)
     test_prob_and_vote(model, args, test_strokes, list_of_strokes)
     if test_strokes_segmentation is not None:
@@ -708,7 +722,7 @@ def detection_task(working_folder, source_folder, log=None):
         train_model(model, args, train_loader, validation_loader)
     
     # Test process
-    load_model(model, args)
+    load_checkpoint(model, args)
     test_model(model, args, test_loader)
     test_prob_and_vote(model, args, test_strokes)
     list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
