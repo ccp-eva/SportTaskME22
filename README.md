@@ -165,7 +165,9 @@ Thank you for your participation.
 
 ## To cite this work
 
-To cite this work, we invite you to include some previous work. Find the bibTex below. TODO: Update with baseline working note and baseline papers ref.
+To cite this work, we invite you to include some previous work. Find the bibTex below.
+
+TODO: Update with baseline working note and task papers ref.
 
 ```
 @inproceedings{PeICPR:2020,

@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
+from torch.nn.modules.batchnorm import _BatchNorm
 
 
 def flatten_features(x):
@@ -18,6 +19,82 @@ def flatten_features(x):
     for s in size:
         num_features *= s
     return num_features
+
+'''
+Batch Normalization 1D for ND tensors
+Updated with update of Pytorch v1.11.0
+'''
+class MyBatchNorm(_BatchNorm): ## Replace nn.BatchNorm3d
+    def __init__(self, num_features, eps=1e-5, momentum=0.1, affine=True, track_running_stats=True):
+        super(MyBatchNorm, self).__init__(num_features, eps, momentum, affine, track_running_stats)
+
+    def _check_input_dim(self, input):
+        self.saved_shape = input.shape
+        if input.dim() != 2 and input.dim() != 3:
+            return input.reshape((input.shape[0], input.shape[1], input[0,0].numel()))
+
+    def forward(self, input):
+        input = self._check_input_dim(input)
+        if self.momentum is None:
+            exponential_average_factor = 0.0
+        else:
+            exponential_average_factor = self.momentum
+
+        if self.training and self.track_running_stats:
+            # TODO: if statement only here to tell the jit to skip emitting this when it is None
+            if self.num_batches_tracked is not None:  # type: ignore[has-type]
+                self.num_batches_tracked.add_(1)  # type: ignore[has-type]
+                if self.momentum is None:  # use cumulative moving average
+                    exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+                else:  # use exponential moving average
+                    exponential_average_factor = self.momentum
+
+        """
+        Decide whether the mini-batch stats should be used for normalization rather than the buffers.
+        Mini-batch stats are used in training mode when the batchsize is greater thhan 1, and in eval mode when buffers are None.
+        """
+        if self.training and input.size()[0]>1:
+            bn_training = True
+        else:
+            bn_training = (self.running_mean is None) and (self.running_var is None)
+
+        """
+        Buffers are only updated if they are to be tracked and we are in training mode. Thus they only need to be
+        passed when the update should occur (i.e. in training mode when they are tracked), or when buffer stats are
+        used for normalization (i.e. in eval mode when buffers are not None).
+        """
+        return F.batch_norm(
+            input,
+            # If buffers are not to be tracked, ensure that they won't be updated
+            self.running_mean
+            if not self.training or self.track_running_stats else None,
+            self.running_var if not self.training or self.track_running_stats else None,
+            self.weight,
+            self.bias,
+            bn_training,
+            exponential_average_factor,
+            self.eps,
+        ).reshape(self.saved_shape)
+
+        # if self.training and self.track_running_stats and input.size()[0]>1 and self.num_batches_tracked is not None:
+        #     self.num_batches_tracked = self.num_batches_tracked + 1
+        #     if self.momentum is None:  # use cumulative moving average
+        #         exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+        #     else:  # use exponential moving average
+        #         exponential_average_factor = self.momentum
+
+        # output = F.batch_norm(
+        #     input,
+        #     self.running_mean,
+        #     self.running_var,
+        #     self.weight,
+        #     self.bias,
+        #     self.training or not self.track_running_stats and input.size()[0]>1,
+        #     exponential_average_factor,
+        #     self.eps)
+        # output = output.reshape(self.saved_shape)
+
+        # return output
 
 '''
 3D Attention Blocks  
@@ -44,13 +121,13 @@ class ResidualBlock3D(nn.Module):
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.stride = stride
-        self.bn1 = nn.BatchNorm3d(in_dim)
+        self.bn1 = MyBatchNorm(in_dim)
         self.relu = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv3d(in_dim, dim_conv, 1, 1, bias = False)
-        self.bn2 = nn.BatchNorm3d(dim_conv)
+        self.bn2 = MyBatchNorm(dim_conv)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv3d(dim_conv, dim_conv, 3, stride, padding = 1, bias = False)
-        self.bn3 = nn.BatchNorm3d(dim_conv)
+        self.bn3 = MyBatchNorm(dim_conv)
         self.relu = nn.ReLU(inplace=True)
         self.conv3 = nn.Conv3d(dim_conv, out_dim, 1, 1, bias = False)
         self.conv4 = nn.Conv3d(in_dim, out_dim , 1, stride, bias = False)
@@ -115,10 +192,10 @@ class AttentionModule3D(nn.Module):
         self.block5 = ResidualBlock3D(in_dim, out_dim, cuda=cuda)
 
         self.block6 = nn.Sequential(
-        	nn.BatchNorm3d(out_dim),
+        	MyBatchNorm(out_dim),
         	nn.ReLU(inplace=True),
         	nn.Conv3d(out_dim, out_dim , kernel_size = 1, stride = 1, bias = False),
-        	nn.BatchNorm3d(out_dim),
+        	MyBatchNorm(out_dim),
         	nn.ReLU(inplace=True),
         	nn.Conv3d(out_dim, out_dim , kernel_size = 1, stride = 1, bias = False),
         	nn.Sigmoid()
@@ -182,7 +259,7 @@ class CCNAttentionNet(nn.Module):
         # conv_stride=(1,1,1)
         # conv_padding=(1,1,1)
         # pool_size=(2,2,2)
-        self.layers = []
+        layers = []
         for idx, out_dim in enumerate(filters):
             # First layer, no diminution of dimension on temporal domain, double
             if idx < 2: 
@@ -193,11 +270,12 @@ class CCNAttentionNet(nn.Module):
             else: # To finally have similar dimension:20x20x24
                 pool_size = [2,2,2]
                 pool_stride = [2,2,2]
-            self.layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
+            layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
             size_data //= pool_stride
             in_dim = out_dim
             # No attention mechanism on the two last layers (min dim = 2 in this configuration) - (W,H,T)=(5,2,3)
-            self.layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
+            layers.append(AttentionModule3D(in_dim, in_dim, size_data, np.ceil(size_data/2), np.ceil(size_data/4), cuda=cuda))
+        self.sequential = nn.Sequential(*layers)
         # (W,H,T)=(3,2,2) - lenght features = 6144
         size_linear_src = size_data[0]*size_data[1]*size_data[2]*in_dim
         size_linear_dest = size_linear_src//6
@@ -212,8 +290,7 @@ class CCNAttentionNet(nn.Module):
             self.cuda()
 
     def forward(self, features):
-        for layer in self.layers:
-            features = layer(features)
+        features = self.sequential(features)
         features = features.view(-1, flatten_features(features))
         features = self.activation(self.linear1(features))
         features = self.linear2(features)

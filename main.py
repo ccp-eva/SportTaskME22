@@ -12,7 +12,9 @@ import torch
 import xml.etree.ElementTree as ET
 import numpy as np
 import torch.optim as optim
+import json
 import pdb
+import traceback
 from torch.autograd import Variable
 from torch.utils.data import Dataset, DataLoader
 from utils import *
@@ -28,15 +30,15 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.05, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
         self.batch_size = batch_size
         self.epochs = epochs
         self.lr = lr
-        self.lr_min = 0.000001
-        self.lr_max = 0.01
+        self.lr_min = 0.00005
+        self.lr_max = 0.05
         self.nesterov = nesterov
         self.weight_decay = weight_decay
         self.momentum = momentum
@@ -49,10 +51,13 @@ class my_variables():
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
-            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
         else:
             self.dtype = torch.FloatTensor
         self.log = setup_logger('model_log', os.path.join(self.model_name, 'model.log'))
+
+        with open(os.path.join(self.model_name, 'model_info.json'), 'w') as f:
+            json.dump(str(self.__dict__.copy()), f, indent=4)
 
 
 '''
@@ -208,7 +213,7 @@ def save_checkpoint(args, model, optimizer, epoch, val_loss):
 
 def load_checkpoint(model, args, optimizer=None):
     checkpoint = torch.load(os.path.join(args.model_name, 'checkpoint.pth'))
-    model.load_state_dict(checkpoint['model_state_dict'], map_location=lambda storage, loc: storage)
+    model.load_state_dict(checkpoint['model_state_dict']) #, map_location=lambda storage, loc: storage
     # model.load_state_dict(checkpoint['model_state_dict'])
     if optimizer is not None:
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
@@ -275,7 +280,7 @@ def train_model(model, args, train_loader, validation_loader):
                     change_lr(optimizer, args, args.lr/5)
                 wait_change_lr = 0
 
-    print_and_log('Best model obtained with acc of %.3g, loss of %.3g at epoch %d - time for training: %ds)' % (max_acc, min_loss_val, best_epoch, int(time.time()-start_time)), log=args.log)
+    print_and_log('Best model obtained with acc of %.3g, loss of %.3g at epoch %d - time for training: %ds' % (max_acc, min_loss_val, best_epoch, int(time.time()-start_time)), log=args.log)
     make_train_figure(loss_train, loss_val, acc_val, acc_train, os.path.join(args.model_name, 'Train.png'))
     return 1
 
@@ -317,6 +322,7 @@ Validation of the model in one epoch
 '''
 def validation_epoch(epoch, args, model, data_loader, criterion):
     with torch.no_grad():
+        model.eval() # Set model to evaluation mode - needed for batchnorm
         begin_time = time.time()
         pid = os.getpid()
         N = len(data_loader.dataset)
@@ -393,6 +399,7 @@ Inference on test set
 '''
 def test_model(model, args, data_loader, list_of_strokes=None):
     with torch.no_grad():
+        model.eval() # Set model to evaluation mode - needed for batchnorm
         xml_files = {}
         path_xml_save = os.path.join(args.model_name, 'xml_test')
         os.mkdir(path_xml_save)
@@ -413,6 +420,7 @@ def test_model(model, args, data_loader, list_of_strokes=None):
 
 def test_prob_and_vote(model, args, test_list, list_of_strokes=None):
     with torch.no_grad():
+        model.eval() # Set model to evaluation mode - needed for batchnorm
         xml_files_vote = {}
         path_xml_save_vote = os.path.join(args.model_name, 'xml_test_vote')
         os.mkdir(path_xml_save_vote)
@@ -506,6 +514,7 @@ def compute_strokes_from_predictions(video_path, all_probs, size_data, window_de
 
 def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
     with torch.no_grad():
+        model.eval() # Set model to evaluation mode - needed for batchnorm
         xml_files_vote = {}
         path_xml_save_vote = os.path.join(args.model_name, 'xml_testseg_vote')
         os.mkdir(path_xml_save_vote)
@@ -523,7 +532,7 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
             test_set = My_dataset_temporal(my_stroke, args.size_data, augmentation=False)
             test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, num_workers=args.workers)
 
-            for batch in test_loader:
+            for idx, batch in enumerate(test_loader):
                 rgb = batch['rgb']
                 rgb = Variable(rgb.type(args.dtype))
                 output = model(rgb)                
