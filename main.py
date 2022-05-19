@@ -30,7 +30,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.05, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -38,7 +38,7 @@ class my_variables():
         self.epochs = epochs
         self.lr = lr
         self.lr_min = 0.00005
-        self.lr_max = 0.05
+        self.lr_max = 0.01
         self.nesterov = nesterov
         self.weight_decay = weight_decay
         self.momentum = momentum
@@ -51,7 +51,7 @@ class my_variables():
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
-            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
+            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
         else:
             self.dtype = torch.FloatTensor
         self.log = setup_logger('model_log', os.path.join(self.model_name, 'model.log'))
@@ -485,6 +485,9 @@ def infer_stroke_list_from_vector(video_path, vector_decision, threshold=30):
             if idx-begin>=threshold:
                 stroke_list.append(My_stroke(video_path, begin, idx, 1))
             begin = -1
+    # Case last element is True
+    if idx-begin>=threshold:
+        stroke_list.append(My_stroke(video_path, begin, idx, 1))
     return stroke_list
 
 def compute_strokes_from_predictions(video_path, all_probs, size_data, window_decision=100):
@@ -537,7 +540,6 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
                 rgb = Variable(rgb.type(args.dtype))
                 output = model(rgb)                
                 all_probs.extend(output.data.tolist())
-
             vote_strokes, mean_strokes, gaussian_strokes = compute_strokes_from_predictions(my_stroke.video_path, all_probs, args.size_data)
 
             store_stroke_to_xml(vote_strokes, xml_files_vote, list_of_strokes)
