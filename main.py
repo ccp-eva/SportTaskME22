@@ -30,14 +30,14 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.01, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
         self.batch_size = batch_size
         self.epochs = epochs
         self.lr = lr
-        self.lr_min = 0.00005
+        self.lr_min = 0.000005
         self.lr_max = 0.01
         self.nesterov = nesterov
         self.weight_decay = weight_decay
@@ -372,18 +372,16 @@ def store_stroke_to_xml(my_stroke_list, xml_files, list_of_strokes=None):
     '''
     for my_stroke in my_stroke_list:
         video_name = my_stroke.video_path.split('/')[-1]
-        if video_name not in xml_files:
-            xml_files[video_name] = ET.Element('video')
         if list_of_strokes is None:
+            if video_name not in xml_files:
+                xml_files[video_name] = ET.Element('video')
             if my_stroke.move:
                 stroke_xml = ET.SubElement(xml_files[video_name], 'action')
                 stroke_xml.set('begin', str(my_stroke.begin))
                 stroke_xml.set('end', str(my_stroke.end))
         else:
-            stroke_xml = ET.SubElement(xml_files[video_name], 'action')
-            stroke_xml.set('begin', str(my_stroke.begin))
-            stroke_xml.set('end', str(my_stroke.end))
-            stroke_xml.set('move', list_of_strokes[my_stroke.move])
+            stroke_xml = ET.SubElement(xml_files['test'], '%s.mp4' % (video_name))
+            stroke_xml.set('class', list_of_strokes[my_stroke.move])
 
 '''
 Save the predictions in xml files
@@ -475,11 +473,10 @@ def infer_stroke_list_from_vector(video_path, vector_decision, threshold=30):
     Segment the vectore in strokes according to min threshold. Note: there is no maximun threshold
     '''
     vector_decision = np.array(vector_decision)>0
-    begin = -1
-    end = -1
+    begin = 0
     stroke_list = []
     for idx, frame_decision in enumerate(vector_decision):
-        if frame_decision and begin==-1:
+        if frame_decision and begin==0:
             begin = idx
         elif not frame_decision and begin != -1:
             if idx-begin>=threshold:

@@ -121,13 +121,13 @@ Similar scripts will be used to compare the test ground truth and your submissio
 
 The submission folder should look like:
 
-TODO: add image tree
-
 `<Team_name>/<task>/<run_id>/<xml_file(s)_from_test_set>`
 
 For example:
 
-- `Team1`
+![](submission_tree.png)
+
+<!-- - `Team1`
 	- `classificationTask`
 	   - `1`
 	     - `<xml_file_from_test_set>`
@@ -159,7 +159,7 @@ For example:
 	   - `5`
 	     - `<xml_file1_from_test_set>`
 	     - `<xml_file2_from_test_set>`
-	     - ...
+	     - ... -->
 
 Thank you for your participation.
 
