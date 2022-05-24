@@ -271,7 +271,7 @@ def train_model(model, args, train_loader, validation_loader):
 
         # Change lr according to evolution of the loss
         if wait_change_lr > 30:
-            if np.mean(loss_train[-30:-10]) > .99*np.mean(loss_train[-10:]):
+            if np.mean(loss_train[-30:-10]) < .99*np.mean(loss_train[-10:]):
                 print_and_log("Diff Loss : %g" % (np.mean(loss_train[-30:-10])-np.mean(loss_train[-10:])), log=args.log)
                 load_checkpoint(model, args, optimizer)
                 if args.lr < args.lr_min:
