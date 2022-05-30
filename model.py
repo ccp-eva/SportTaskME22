@@ -251,7 +251,7 @@ class AttentionModule3D(nn.Module):
 '''
 class CCNAttentionNetV1(nn.Module):
     def __init__(self, size_data, n_classes, in_dim=3, filters=[8,16,32,64,128,256], cuda=True):
-        super(CCNAttentionNet, self).__init__()
+        super(CCNAttentionNetV1, self).__init__()
 
         layers = []
         for idx, out_dim in enumerate(filters):
@@ -289,9 +289,9 @@ class CCNAttentionNetV1(nn.Module):
 
 
 
-class CCNAttentionNet(nn.Module):
+class CCNAttentionNetV2(nn.Module):
     def __init__(self, size_data, n_classes, in_dim=3, filters=[32,64,128,256,512], cuda=True):
-        super(CCNAttentionNet, self).__init__()
+        super(CCNAttentionNetV2, self).__init__()
         # Per default parameters
         # pool_size = (2,2,2)
         # pool_stride = (2,2,2)

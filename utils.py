@@ -195,48 +195,36 @@ def make_train_figure(loss_train, loss_val, acc_val, acc_train, path_to_save):
     plt.close('all')
     return True
 
-def plot_confusion_matrix(cm, classes, path, normalize=False, cmap=plt.cm.Blues):
+def plot_confusion_matrix(cm, classes, save_path, cmap=plt.cm.Blues):
     """
     This function prints and plots the confusion matrix.
-    Normalization can be applied by setting 'normalize=True'.
     """
     
     acc = np.mean(np.array([cm[i,i] for i in range(len(cm))]).sum()/cm.sum()) * 100
-
-    if normalize:
-        cm_txt = cm.astype('float') / np.array([max(tmp,1) for tmp in cm.sum(axis=1)[:, np.newaxis]]).astype('float')
-    else:
-        cm_txt = cm
-    
-    cm = cm.astype('float') / np.array([max(tmp,1) for tmp in cm.sum(axis=1)[:, np.newaxis]]).astype('float')
+    # Normalize the confusion matrix for colormapping
+    # Transpose the matrix to divide each row of the matrix by each vector element. Transpose the result to return to the matrix’s previous orientation.
+    cm = (cm.T / [max(tmp,1) for tmp in cm.sum(axis=1)]).T
     acc_2 = np.array([cm[i,i] for i in range(len(cm))])
 
-    title = 'Accuracy of %.1f%% ($\\mu$ = %.1f with $\\sigma$ = %.1f)' % (acc, np.mean(acc_2)*100, np.std(acc_2)*100)
-    plt.subplots(figsize=(12,12))
+    title = 'Accuracy of %.1f%%\n$\\mu$ = %.1f with $\\sigma$ = %.1f' % (acc, np.mean(acc_2)*100, np.std(acc_2)*100)
+    if len(classes)>=12:
+        plt.subplots(figsize=(12,12))
+    elif len(classes)>=6:
+        plt.subplots(figsize=(8,8))
+    else:
+        plt.subplots(figsize=(5,5))
 
     plt.imshow(cm.astype('float'), interpolation='nearest', cmap=cmap, vmin=0, vmax=1)
-    plt.title(title, fontsize=18)
+    plt.title(title, fontsize=16)
     plt.colorbar(fraction=0.046, pad=0.04)
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=90, fontsize=14)
     plt.yticks(tick_marks, classes, fontsize=14)
 
-    fmt = '.2g' if normalize else 'd'
-    thresh = .5
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        if normalize:
-            plt.text(j, i, format(round(cm_txt[i, j]*100,2), fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-        else:
-            plt.text(j, i, format(round(cm_txt[i, j],2), fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
     plt.ylabel('True label', fontsize=14)
     plt.xlabel('Predicted label', fontsize=14)
     plt.tight_layout()
-    plt.savefig(path)
+    plt.savefig(save_path)
     plt.close('all')
 
 

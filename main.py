@@ -30,7 +30,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load='2022-05-25_15-03-18', cuda=True, batch_size=10, workers=10, epochs=2000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -197,7 +197,8 @@ Model Architecture
 '''
 def make_architecture(args, output_size):
     print_and_log('Make Model', log=args.log)
-    model = CCNAttentionNet(args.size_data.copy(), output_size)
+    model = CCNAttentionNetV2(args.size_data.copy(), output_size)
+    print_and_log('Model %s created' % (model.__class__.__name__), log=args.log)
     ## Use GPU
     if args.cuda:
         model.cuda()
@@ -271,7 +272,7 @@ def train_model(model, args, train_loader, validation_loader):
 
         # Change lr according to evolution of the loss
         if wait_change_lr > 30:
-            if np.mean(loss_train[-30:-10]) < .99*np.mean(loss_train[-10:]):
+            if .99*np.mean(loss_train[-30:-10]) < np.mean(loss_train[-10:]):
                 print_and_log("Diff Loss : %g" % (np.mean(loss_train[-30:-10])-np.mean(loss_train[-10:])), log=args.log)
                 load_checkpoint(model, args, optimizer)
                 if args.lr < args.lr_min:
@@ -353,18 +354,19 @@ def store_xml_data(my_stroke_list, predicted, xml_files, list_of_strokes=None):
     '''
     for video_path, begin, end, prediction_index in zip(my_stroke_list['video_path'], my_stroke_list['begin'].tolist(), my_stroke_list['end'].tolist(), predicted):
         video_name = video_path.split('/')[-1]
-        if video_name not in xml_files:
-            xml_files[video_name] = ET.Element('video')
         if list_of_strokes is None:
+            if video_name not in xml_files:
+                xml_files[video_name] = ET.Element('video')
             if prediction_index:
                 stroke_xml = ET.SubElement(xml_files[video_name], 'action')
                 stroke_xml.set('begin', str(begin))
                 stroke_xml.set('end', str(end))
         else:
-            stroke_xml = ET.SubElement(xml_files[video_name], 'action')
-            stroke_xml.set('begin', str(begin))
-            stroke_xml.set('end', str(end))
-            stroke_xml.set('move', list_of_strokes[prediction_index])
+            if 'test' not in xml_files:
+                xml_files['test'] = ET.Element('videos')
+            stroke_xml = ET.SubElement(xml_files['test'], 'video')
+            stroke_xml.set('name', '%s.mp4' % (video_name))
+            stroke_xml.set('class', list_of_strokes[prediction_index])
 
 def store_stroke_to_xml(my_stroke_list, xml_files, list_of_strokes=None):
     '''
@@ -380,16 +382,19 @@ def store_stroke_to_xml(my_stroke_list, xml_files, list_of_strokes=None):
                 stroke_xml.set('begin', str(my_stroke.begin))
                 stroke_xml.set('end', str(my_stroke.end))
         else:
-            stroke_xml = ET.SubElement(xml_files['test'], '%s.mp4' % (video_name))
+            if 'test' not in xml_files:
+                xml_files['test'] = ET.Element('videos')
+            stroke_xml = ET.SubElement(xml_files['test'], 'video')
+            stroke_xml.set('name', '%s.mp4' % (video_name))
             stroke_xml.set('class', list_of_strokes[my_stroke.move])
 
 '''
 Save the predictions in xml files
 '''
 def save_xml_data(xml_files, path_xml_save):
-    for video_name in xml_files:
-        xml_file = open('%s.xml' % os.path.join(path_xml_save, video_name), 'wb')
-        xml_file.write(ET.tostring(xml_files[video_name]))
+    for xml_name in xml_files:
+        xml_file = open('%s.xml' % os.path.join(path_xml_save, xml_name), 'wb')
+        xml_file.write(ET.tostring(xml_files[xml_name]))
         xml_file.close()
 
 '''
@@ -411,7 +416,7 @@ def test_model(model, args, data_loader, list_of_strokes=None):
             rgb = Variable(rgb.type(args.dtype))
             output = model(rgb)
             _, predicted = torch.max(output.detach(), 1)
-            store_xml_data(my_stroke_list, predicted, xml_files, list_of_strokes)
+            store_xml_data(my_stroke_list, predicted, xml_files, list_of_strokes=list_of_strokes)
 
         progress_bar(N, N, 'Test done', 1, log=args.log)
         save_xml_data(xml_files, path_xml_save)
@@ -473,18 +478,19 @@ def infer_stroke_list_from_vector(video_path, vector_decision, threshold=30):
     Segment the vectore in strokes according to min threshold. Note: there is no maximun threshold
     '''
     vector_decision = np.array(vector_decision)>0
-    begin = 0
+    begin = -1
     stroke_list = []
     for idx, frame_decision in enumerate(vector_decision):
-        if frame_decision and begin==0:
+        if frame_decision and begin==-1:
             begin = idx
         elif not frame_decision and begin != -1:
             if idx-begin>=threshold:
                 stroke_list.append(My_stroke(video_path, begin, idx, 1))
             begin = -1
-    # Case last element is True
-    if idx-begin>=threshold:
-        stroke_list.append(My_stroke(video_path, begin, idx, 1))
+    # Case if last element is True
+    if frame_decision and begin != -1:
+        if idx-begin>=threshold:
+            stroke_list.append(My_stroke(video_path, begin, idx, 1))
     return stroke_list
 
 def compute_strokes_from_predictions(video_path, all_probs, size_data, window_decision=100):
@@ -657,8 +663,8 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     
     # Test process
     load_checkpoint(model, args)
-    test_model(model, args, test_loader, list_of_strokes)
-    test_prob_and_vote(model, args, test_strokes, list_of_strokes)
+    test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
+    test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
     if test_strokes_segmentation is not None:
         test_videos_segmentation(model, args, test_strokes_segmentation)
     return 1
@@ -734,8 +740,8 @@ def detection_task(working_folder, source_folder, log=None):
     
     # Test process
     load_checkpoint(model, args)
-    test_model(model, args, test_loader)
-    test_prob_and_vote(model, args, test_strokes)
+    # test_model(model, args, test_loader)
+    # test_prob_and_vote(model, args, test_strokes)
     list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
     test_videos_segmentation(model, args, list_of_test_videos)
     return 1
@@ -760,6 +766,6 @@ if __name__ == "__main__":
 
     # Tasks
     detection_task(working_folder, source_folder, log=log)
-    classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
+    # classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
