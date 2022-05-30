@@ -30,7 +30,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load='2022-05-25_15-03-18', cuda=True, batch_size=10, workers=10, epochs=2000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=2000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -640,7 +640,7 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     Perform also on the detection task when the videos for segmentation are provided
     '''
     print_and_log('\nClassification Task', log=log)
-    # Initial list
+    # Initialization
     reset_training(1)
     task_name = 'classificationTask'
     task_path = os.path.join(working_folder, task_name)
@@ -716,7 +716,7 @@ def detection_task(working_folder, source_folder, log=None):
     Return test segmentation video to try with the classification model
     '''
     print_and_log('\nDetection Task', log=log)
-    # Initial list
+    # Initialization
     reset_training(1)
     task_name = 'detectionTask'
     task_path = os.path.join(working_folder, task_name)
@@ -740,8 +740,8 @@ def detection_task(working_folder, source_folder, log=None):
     
     # Test process
     load_checkpoint(model, args)
-    # test_model(model, args, test_loader)
-    # test_prob_and_vote(model, args, test_strokes)
+    test_model(model, args, test_loader)
+    test_prob_and_vote(model, args, test_strokes)
     list_of_test_videos = get_videos_list(os.path.join(task_path, 'test'))
     test_videos_segmentation(model, args, list_of_test_videos)
     return 1
@@ -766,6 +766,6 @@ if __name__ == "__main__":
 
     # Tasks
     detection_task(working_folder, source_folder, log=log)
-    # classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
+    classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
