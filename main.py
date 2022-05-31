@@ -51,10 +51,10 @@ class my_variables():
         os.makedirs(self.model_name, exist_ok=True)
         if cuda:
             self.dtype = torch.cuda.FloatTensor
-            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+            os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '1'
         else:
             self.dtype = torch.FloatTensor
-        self.log = setup_logger('model_log', os.path.join(self.model_name, 'model.log'))
+        self.log = setup_logger('model_log', os.path.join(self.model_name, 'model_%s.log' % (datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))))
 
         with open(os.path.join(self.model_name, 'model_info.json'), 'w') as f:
             json.dump(str(self.__dict__.copy()), f, indent=4)
@@ -197,7 +197,7 @@ Model Architecture
 '''
 def make_architecture(args, output_size):
     print_and_log('Make Model', log=args.log)
-    model = CCNAttentionNetV2(args.size_data.copy(), output_size)
+    model = CCNAttentionNetV1(args.size_data.copy(), output_size)
     print_and_log('Model %s created' % (model.__class__.__name__), log=args.log)
     ## Use GPU
     if args.cuda:
@@ -495,9 +495,9 @@ def infer_stroke_list_from_vector(video_path, vector_decision, threshold=30):
 
 def compute_strokes_from_predictions(video_path, all_probs, size_data, window_decision=100):
     # Repeat the first and last prediction to center all predictions #
-    predictions = [all_probs[0]]*size_data[2]
+    predictions = [all_probs[0]]*(size_data[2]//2)
     predictions.extend(all_probs)
-    predictions.extend([all_probs[-1]]*size_data[2])
+    predictions.extend([all_probs[-1]]*(size_data[2]//2))
 
     # Vote decision #
     vote_list = [[1. if prob == max(probs) else 0 for prob in probs] for probs in predictions]
