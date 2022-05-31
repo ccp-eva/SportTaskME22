@@ -518,7 +518,7 @@ def compute_strokes_from_predictions(video_path, all_probs, size_data, window_de
 
     return vote_strokes, mean_strokes, gaussian_strokes
 
-def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
+def test_videos_segmentation(model, args, test_list, sum_stroke_scores=False):
     with torch.no_grad():
         model.eval() # Set model to evaluation mode - needed for batchnorm
         xml_files_vote = {}
@@ -530,6 +530,17 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
         xml_files_gaussian = {}
         path_xml_save_gaussian = os.path.join(args.model_name, 'xml_testseg_gaussian')
         os.mkdir(path_xml_save_gaussian)
+
+        if sum_stroke_scores:
+            xml_files_vote_scoresummed = {}
+            path_xml_save_vote_scoresummed = os.path.join(args.model_name, 'xml_testseg_vote_scoresummed')
+            os.mkdir(path_xml_save_vote_scoresummed)
+            xml_files_mean_scoresummed = {}
+            path_xml_save_mean_scoresummed = os.path.join(args.model_name, 'xml_testseg_mean_scoresummed')
+            os.mkdir(path_xml_save_mean_scoresummed)
+            xml_files_gaussian_scoresummed = {}
+            path_xml_save_gaussian_scoresummed = os.path.join(args.model_name, 'xml_testseg_gaussian_scoresummed')
+            os.mkdir(path_xml_save_gaussian_scoresummed)
 
         for idx, my_stroke in enumerate(test_list):
             progress_bar(idx, len(test_list), 'Window Testing')
@@ -545,14 +556,27 @@ def test_videos_segmentation(model, args, test_list, list_of_strokes=None):
                 all_probs.extend(output.data.tolist())
             vote_strokes, mean_strokes, gaussian_strokes = compute_strokes_from_predictions(my_stroke.video_path, all_probs, args.size_data)
 
-            store_stroke_to_xml(vote_strokes, xml_files_vote, list_of_strokes)
-            store_stroke_to_xml(mean_strokes, xml_files_mean, list_of_strokes)
-            store_stroke_to_xml(gaussian_strokes, xml_files_gaussian, list_of_strokes)
+            store_stroke_to_xml(vote_strokes, xml_files_vote)
+            store_stroke_to_xml(mean_strokes, xml_files_mean)
+            store_stroke_to_xml(gaussian_strokes, xml_files_gaussian)
+
+            if sum_stroke_scores:
+                all_probs_scoresummed = [[probs[0], probs[1:].sum()] for probs in all_probs]
+                vote_strokes_scoresummed, mean_strokes_scoresummed, gaussian_strokes_scoresummed = compute_strokes_from_predictions(my_stroke.video_path, all_probs_scoresummed, args.size_data)
+                
+                store_stroke_to_xml(vote_strokes_scoresummed, xml_files_vote_scoresummed)
+                store_stroke_to_xml(mean_strokes_scoresummed, xml_files_mean_scoresummed)
+                store_stroke_to_xml(gaussian_strokes_scoresummed, xml_files_gaussian_scoresummed)
 
         progress_bar(len(test_list), len(test_list), 'Window Testing Done', 1, log=args.log)
         save_xml_data(xml_files_vote, path_xml_save_vote)
         save_xml_data(xml_files_mean, path_xml_save_mean)
         save_xml_data(xml_files_gaussian, path_xml_save_gaussian)
+
+        if sum_stroke_scores:
+            save_xml_data(xml_files_vote_scoresummed, path_xml_save_vote_scoresummed)
+            save_xml_data(xml_files_mean_scoresummed, path_xml_save_mean_scoresummed)
+            save_xml_data(xml_files_gaussian_scoresummed, path_xml_save_gaussian_scoresummed)
     return 1
 
 
@@ -666,7 +690,7 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
     test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
     if test_strokes_segmentation is not None:
-        test_videos_segmentation(model, args, test_strokes_segmentation)
+        test_videos_segmentation(model, args, test_strokes_segmentation, sum_stroke_scores=True)
     return 1
 
 '''
