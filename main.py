@@ -30,7 +30,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=2000, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load='modelV1_2022-05-28_00-51-47', cuda=True, batch_size=10, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -116,7 +116,9 @@ class My_stroke:
 
 
 
-'''Infer Negative Samples from annotation betwen strokes when there are more than length_min frames'''
+'''
+Infer Negative Samples from annotation betwen strokes when there are more than length_min frames
+'''
 def build_negative_strokes(stroke_list, length_min=200):
     video_path = ''
     for stroke in stroke_list.copy():
@@ -271,19 +273,25 @@ def train_model(model, args, train_loader, validation_loader):
             wait_change_lr = 0
 
         # Change lr according to evolution of the loss
-        if wait_change_lr > 30:
+        if min_loss_val<.7*loss_val_:
+            print_and_log("Loss much greater than previous minimum loss.\n\tMin: %g VS %g" % (min_loss_val, loss_val_), log=args.log)
+            change_lr_protocol(model, optimizer, args, wait_change_lr)
+        elif wait_change_lr > 30:
             if .99*np.mean(loss_train[-30:-10]) < np.mean(loss_train[-10:]):
                 print_and_log("Diff Loss : %g" % (np.mean(loss_train[-30:-10])-np.mean(loss_train[-10:])), log=args.log)
-                load_checkpoint(model, args, optimizer)
-                if args.lr < args.lr_min:
-                    change_lr(optimizer, args, args.lr_max)
-                else:
-                    change_lr(optimizer, args, args.lr/5)
-                wait_change_lr = 0
+                change_lr_protocol(model, optimizer, args, wait_change_lr)
 
     print_and_log('Best model obtained with acc of %.3g, loss of %.3g at epoch %d - time for training: %ds' % (max_acc, min_loss_val, best_epoch, int(time.time()-start_time)), log=args.log)
     make_train_figure(loss_train, loss_val, acc_val, acc_train, os.path.join(args.model_name, 'Train.png'))
     return 1
+
+def change_lr_protocol(model, optimizer, args, wait_change_lr):
+    load_checkpoint(model, args, optimizer)
+    if args.lr < args.lr_min:
+        change_lr(optimizer, args, args.lr_max)
+    else:
+        change_lr(optimizer, args, args.lr/5)
+    wait_change_lr = 0
 
 '''
 Update of the model in one epoch
@@ -561,7 +569,7 @@ def test_videos_segmentation(model, args, test_list, sum_stroke_scores=False):
             store_stroke_to_xml(gaussian_strokes, xml_files_gaussian)
 
             if sum_stroke_scores:
-                all_probs_scoresummed = [[probs[0], probs[1:].sum()] for probs in all_probs]
+                all_probs_scoresummed = [[probs[0], sum(probs[1:])] for probs in all_probs]
                 vote_strokes_scoresummed, mean_strokes_scoresummed, gaussian_strokes_scoresummed = compute_strokes_from_predictions(my_stroke.video_path, all_probs_scoresummed, args.size_data)
                 
                 store_stroke_to_xml(vote_strokes_scoresummed, xml_files_vote_scoresummed)
@@ -687,8 +695,8 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     
     # Test process
     load_checkpoint(model, args)
-    test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
-    test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
+    # test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
+    # test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
     if test_strokes_segmentation is not None:
         test_videos_segmentation(model, args, test_strokes_segmentation, sum_stroke_scores=True)
     return 1
@@ -789,7 +797,7 @@ if __name__ == "__main__":
     make_work_tree(working_folder, source_folder, frame_width=320, log=log)
 
     # Tasks
-    detection_task(working_folder, source_folder, log=log)
+    # detection_task(working_folder, source_folder, log=log)
     classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
