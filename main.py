@@ -30,7 +30,7 @@ print('Nb of threads for OpenCV : ', cv2.getNumThreads())
 Model variables
 '''
 class my_variables():
-    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load='modelV1_2022-05-28_00-51-47', cuda=True, batch_size=10, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
+    def __init__(self, working_path, task_name, size_data=[320,180,96], model_load=None, cuda=True, batch_size=10, workers=10, epochs=500, lr=0.0001, nesterov=True, weight_decay=0.005, momentum=0.5):
         self.size_data = np.array(size_data)
         self.cuda = cuda
         self.workers = workers
@@ -695,8 +695,8 @@ def classification_task(working_folder, log=None, test_strokes_segmentation=None
     
     # Test process
     load_checkpoint(model, args)
-    # test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
-    # test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
+    test_model(model, args, test_loader, list_of_strokes=list_of_strokes)
+    test_prob_and_vote(model, args, test_strokes, list_of_strokes=list_of_strokes)
     if test_strokes_segmentation is not None:
         test_videos_segmentation(model, args, test_strokes_segmentation, sum_stroke_scores=True)
     return 1
@@ -797,7 +797,7 @@ if __name__ == "__main__":
     make_work_tree(working_folder, source_folder, frame_width=320, log=log)
 
     # Tasks
-    # detection_task(working_folder, source_folder, log=log)
+    detection_task(working_folder, source_folder, log=log)
     classification_task(working_folder, log=log, test_strokes_segmentation=get_videos_list(os.path.join(working_folder, 'detectionTask', 'test')))
     
     print_and_log('All Done in %ds' % (time.time()-start_time), log=log)
