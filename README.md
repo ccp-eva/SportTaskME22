@@ -95,6 +95,55 @@ main.py shall be adapted according to your tree. We encourage participants to fo
 
 You may having trouble working with gpu and pytorch even with the installation steps. This might be due to your platform. You can reinstall pytorch using the instruction on [the pytorch website](https://pytorch.org/). You may also check the [CUDA installation guideline](https://docs.nvidia.com/cuda/).
 
+## Method
+
+This implementation suggest two networks. Both networks are similar to the work "3D attention mechanisms in Twin Spatio-Temporal Convolutional Neural Networks. Application to  action classification in videos of table tennis games." by Pierre-Etienne Martin et al., ICPR 2021. They also follow similar training method: warm restart technique. The main divergence if the absence of Region Of Interest (ROI) which was computed from Optical Flow (OF) values.
+
+The two networs are the following:
+- V1, with succesive 4 conv+pool+attention layers and 2 conv+pool layers. All conv. layers use 3x3x3 filters. The first layers use 2x2x1 pooling filters (not pooling on the temporal doamin) and 2x2x2 pooling filters for the other layers.
+- V2, with 5 succesive conv+pool+attention layers. Conv. filters are of size 7x5x3 and pooling filters of size 4x3x2 for the first two layers. The rest uses 3x3x3 and 2x2x2 for conv. and pooling filters repectively.
+
+Each subtask has its own model. The size of the last layer is modified according to the number of class considered. Similar procedure was followed in "Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark" by Pierre-Etienne Martin. Several decision method are tested all subtasks: No Window, Vote, Mean, and Gaussian according to a temporal window.
+
+In addition, the classification task model was tested to perform segmentation and its performance are reported in the next section. Two appraoches are considred: Negative class score VS all others for decision and Negative class score VS sum of all the others.
+
+## Performance       
+
+### Classification subtask
+
+| Model Architecture	| Decision Method	| Accuracy score |
+|-----------------------|-------------------|----------------|
+| V1 					| No Window			| .847      |
+| V1 					| Vote				| .839      |
+| V1 					| Mean				| .856      |
+| V1 					| Gaussian			| .856      |
+| V2 					| No Window			|       |
+| V2 					| Vote				|       |
+| V2 					| Mean				|       |
+| V2 					| Gaussian			|       |
+
+### Detection subtask
+
+| Model Architecture	| Decision Method	| Global IoU | mAP |
+|-----------------------|-------------------|----------------|
+| V1 					| No Window			|		| 		|
+| V1 					| Vote				|       | 		|
+| V1 					| Mean				|       | 		|
+| V1 					| Gaussian			|       | 		|
+| V1 Classification		| No Window			|       | 		|
+| V1 Classification		| Vote				|       | 		|
+| V1 Classification		| Mean				|       | 		|
+| V1 Classification		| Gaussian			| .211       | .00428 |
+| V2 					| No Window			|       | 		|
+| V2 					| Vote				|       | 		|
+| V2 					| Mean				|       | 		|
+| V2 					| Gaussian			|       | 		|
+| V2 Classification		| No Window			|       | 		|
+| V2 Classification		| Vote				|       | 		|
+| V2 Classification		| Mean				|       | 		|
+| V2 Classification		| Gaussian			|       | 		|
+
+
 # Submittion
 
 Please, insert your run in the <Team_name> folder (that you may rename with the name of your team) according to the task. The name of the runs may vary but you may use simple digits. Zip the folder and sent it to ![](image1.png).
@@ -195,6 +244,15 @@ TODO: Update with baseline working note and task papers ref.
   biburl    = {https://dblp.org/rec/phd/hal/Martin20a.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }VERSION = {v1},
+}
+
+@inproceedings{mediaeval/Martin21/baseline,
+  author    = {Pierre{-}Etienne Martin},
+  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
+  booktitle = {MediaEval},
+   series    = {{CEUR} Workshop Proceedings},
+   publisher = {CEUR-WS.org},
+  year      = {2021}
 }
 ```
 

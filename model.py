@@ -308,6 +308,8 @@ class CCNAttentionNetV2(nn.Module):
                 pool_size=(4,3,2)
                 pool_stride = [4,3,2]
             else: # To finally have similar dimension:20x20x24
+                conv_size=(3,3,3)
+                conv_padding=(1,1,1)
                 pool_size = [2,2,2]
                 pool_stride = [2,2,2]
             layers.append(BlockConvReluPool3D(in_dim, out_dim, cuda=cuda, pool_size=pool_size, pool_stride=pool_stride))
