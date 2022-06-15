@@ -125,7 +125,7 @@ In addition, the classification task model was tested to perform segmentation an
 ### Detection subtask
 
 | Model Architecture	| Decision Method	| Global IoU | mAP |
-|-----------------------|-------------------|----------------|
+|-----------------------|-------------------|------------|-----|
 | V1 					| No Window			|		| 		|
 | V1 					| Vote				|       | 		|
 | V1 					| Mean				|       | 		|
