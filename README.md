@@ -111,37 +111,61 @@ In addition, the classification task model was tested to perform segmentation an
 
 ### Classification subtask
 
-| Model Architecture	| Decision Method	| Accuracy score |
-|-----------------------|-------------------|----------------|
-| V1 					| No Window			| .847      |
-| V1 					| Vote				| .839      |
-| V1 					| Mean				| .856      |
-| V1 					| Gaussian			| .856      |
-| V2 					| No Window			|       |
-| V2 					| Vote				|       |
-| V2 					| Mean				|       |
-| V2 					| Gaussian			|       |
+Performance of each model is presented according to each decision method in term on global classification accuracy in the folowwing table.
+
+| Model | No Window	| Vote | Mean | Gaussian |
+| :---: | :---: | :---: | :---: | :---: |
+| V1 | .847 | .839 | .856 | .856 |
+| V2 | . | . | . | . |
 
 ### Detection subtask
 
-| Model Architecture	| Decision Method	| Global IoU | mAP |
-|-----------------------|-------------------|------------|-----|
-| V1 					| No Window			|		| 		|
-| V1 					| Vote				|       | 		|
-| V1 					| Mean				|       | 		|
-| V1 					| Gaussian			|       | 		|
-| V1 Classification		| No Window			|       | 		|
-| V1 Classification		| Vote				|       | 		|
-| V1 Classification		| Mean				|       | 		|
-| V1 Classification		| Gaussian			| .211       | .00428 |
-| V2 					| No Window			|       | 		|
-| V2 					| Vote				|       | 		|
-| V2 					| Mean				|       | 		|
-| V2 					| Gaussian			|       | 		|
-| V2 Classification		| No Window			|       | 		|
-| V2 Classification		| Vote				|       | 		|
-| V2 Classification		| Mean				|       | 		|
-| V2 Classification		| Gaussian			|       | 		|
+The detection subtask is evaluated with regard to the Global IoU metric and the mAP (highest is the best).
+
+#### With video candidates
+
+Video candidates are purely succesive segments of frames without overlap and these blocks are classified.
+
+##### IoU metric
+
+| Model | No Window	| Vote | Mean | Gaussian |
+| :---: | :---: | :---: | :---: | :---: |
+| V1 | .358 | .360 | .365 | .361 |
+| V2 | . | . | . | . |
+
+##### mAP metric
+
+| Model | No Window	| Vote | Mean | Gaussian |
+| :---: | :---: | :---: | :---: | :---: |
+| V1 | .111 | .114 | .113 | .113 |
+| V2 | . | . | . | . |
+
+
+#### With a sliding window
+
+Here a sliding window with step one ised on the test videos. The outputs are combined in order to make decision following similar window methods. The models from subtask 1 are also tested (V1 Class. and V2 Class. wrt Neg VS all and Neg VS sum(all) for decision).
+
+##### IoU metric
+
+| Model	| Vote | Mean | Gaussian |
+| :---: | :---: | :---: | :---: |
+| V1 | .515 | .341 | .33 |
+| V1 Class. Neg VS all | .201 | .210 | .211 |
+| V1 Class. Neg VS sum(all) | .203 | .203 | .205 |
+| V2 | .501 | . | . |
+| V2 Class. Neg VS all | . | . | . |
+| V2 Class. Neg VS sum(all) | . | . | . |
+
+##### mAP metric
+
+| Model	| Vote | Mean | Gaussian |
+| :---: | :---: | :---: | :---: |
+| V1 | .131 | .00201 | .00227 |
+| V1 Class. Neg VS all | .00012 | .0.0017 | .00428 |
+| V1 Class. Neg VS sum(all) | .000019 | .000054 | .00174 |
+| V2 | .133 | . | . |
+| V2 Class. Neg VS all | . | . | . |
+| V2 Class. Neg VS sum(all) | . | . | . |
 
 
 # Submittion
