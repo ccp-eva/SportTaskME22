@@ -41,7 +41,7 @@ find -type f -exec md5sum "{}" + > MD5SUMS
 -->
 To have access to the data:
 1. register to MediaEval workshop (free) with your **institutional** email address (gmail, gmx, outlook addresses... will not be accepted). See the [MediaEval website](https://multimediaeval.github.io/editions/2022/) to register.
-2. send to the MediaEval organizers the [MediaEval data agreement](https://multimediaeval.github.io/editions/2021/docs/MediaEval2022_UsageAgreement.pdf) filled for our task. Instructions are on the document.
+2. send to the MediaEval organizers the [MediaEval data agreement](https://multimediaeval.github.io/editions/2022/docs/MediaEval2022_UsageAgreement.pdf) filled for our task (pages 1, 2, 3 and 8). Instructions are on the document.
 3. by accessing the data, you agree to the [Particular Conditions](Particular_conditions2022.pdf) of usage of the data.
 To formally accept them, send an email to ![](image1.png) with: « I Accept the Usage Conditions » in the email body.
 
@@ -116,7 +116,7 @@ Performance of each model is presented according to each decision method in term
 | Model | No Window	| Vote | Mean | Gaussian |
 | :---: | :---: | :---: | :---: | :---: |
 | V1 | .847 | .839 | .856 | .856 |
-| V2 | . | . | . | . |
+| V2 | .856 | .822 | .831 | **.864** |
 
 ### Detection subtask
 
@@ -130,15 +130,15 @@ Video candidates are purely succesive segments of frames without overlap and the
 
 | Model | No Window	| Vote | Mean | Gaussian |
 | :---: | :---: | :---: | :---: | :---: |
-| V1 | .358 | .360 | .365 | .361 |
-| V2 | . | . | . | . |
+| V1 | .358 | .360 | **.365** | .361 |
+| V2 | .322 | .329 | .333 | .331 |
 
 ##### mAP metric
 
 | Model | No Window	| Vote | Mean | Gaussian |
 | :---: | :---: | :---: | :---: | :---: |
 | V1 | .111 | .114 | .113 | .113 |
-| V2 | . | . | . | . |
+| V2 | .111 | **.118** | .117 | .117 |
 
 
 #### With a sliding window
@@ -149,28 +149,30 @@ Here a sliding window with step one ised on the test videos. The outputs are com
 
 | Model	| Vote | Mean | Gaussian |
 | :---: | :---: | :---: | :---: |
-| V1 | .515 | .341 | .33 |
+| V1 | **.515** | .341 | .33 |
 | V1 Class. Neg VS all | .201 | .210 | .211 |
 | V1 Class. Neg VS sum(all) | .203 | .203 | .205 |
-| V2 | .501 | . | . |
-| V2 Class. Neg VS all | . | . | . |
-| V2 Class. Neg VS sum(all) | . | . | . |
+| V2 | .308 | .473 | .466 |
+| V2 Class. Neg VS all | .207 | .215 | .216 |
+| V2 Class. Neg VS sum(all) | .209 | .211 | .212 |
 
 ##### mAP metric
 
 | Model	| Vote | Mean | Gaussian |
 | :---: | :---: | :---: | :---: |
-| V1 | .131 | .00201 | .00227 |
+| V1 | **.131** | .00201 | .00227 |
 | V1 Class. Neg VS all | .00012 | .0.0017 | .00428 |
 | V1 Class. Neg VS sum(all) | .000019 | .000054 | .00174 |
-| V2 | .133 | . | . |
-| V2 Class. Neg VS all | . | . | . |
-| V2 Class. Neg VS sum(all) | . | . | . |
+| V2 | .000731 | .102 | .1 |
+| V2 Class. Neg VS all | .000506 | .00173 | .00237 |
+| V2 Class. Neg VS sum(all) | .00145 | .00185 | .00261 |
 
 
 # Submittion
 
-Please, insert your run in the <Team_name> folder (that you may rename with the name of your team) according to the task. The name of the runs may vary but you may use simple digits. Zip the folder and sent it to ![](image1.png).
+## Share you work with us
+
+Please, insert your run in the <Team_name> folder (that you may rename with the name of your team) according to the task. The name of the runs may vary but you may use simple digits. Zip the folder and sent it to ![](image1.png). You can submit up to five runs for each subtask. It is **not mandatory** to submit runs for both subtasks for participating.
 
 Before sending your submission, check if the format you will send is correct by running from the data/ folder:
 
@@ -236,14 +238,39 @@ For example:
 
 Thank you for your participation.
 
+## Working Note paper
+
+After your submition, you will be asked to submit a Working Note paper to share your method, implementation and results. We strongly advice to make your implementation available on github and share its link. Please report the baseline results for comparison.
+
+Guideline to write your paper is available [there](https://docs.google.com/document/d/12uSn0rRYxa3buiFNEbpa46dKsHOyqV2PHU_joRGMHRw/edit?usp=sharing). Latex template can de dowlanded from [here](https://drive.google.com/file/d/1SMXWs-i4DKEUdblvzYaqvPuHLYHdBlQx/view?usp=sharing). Please update the shortitle command to fit out task with:
+`\renewcommand{\shorttitle}{Sport Task}`
+
+Please cite the overview paper describing the task and the baseline paper. See next section.
+
 ## To cite this work
 
 To cite this work, we invite you to include some previous work. Find the bibTex below.
 
-TODO: Update with baseline working note and task papers ref.
-
 ```
-@inproceedings{PeICPR:2020,
+@inproceedings{mediaeval/Martin/2022/overview,
+  author    = {Pierre{-}Etienne Martin},
+  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
+  booktitle = {MediaEval},
+   series    = {{CEUR} Workshop Proceedings},
+   publisher = {CEUR-WS.org},
+  year      = {2022}
+}
+
+@inproceedings{mediaeval/Martin/2022/baseline,
+  author    = {Pierre{-}Etienne Martin},
+  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
+  booktitle = {MediaEval},
+   series    = {{CEUR} Workshop Proceedings},
+   publisher = {CEUR-WS.org},
+  year      = {2022}
+}
+
+@inproceedings{ICPR/Martin/2020,
   author    = {Pierre{-}Etienne Martin and
               Jenny Benois{-}Pineau and
               Renaud P{\'{e}}teri and
@@ -254,7 +281,7 @@ TODO: Update with baseline working note and task papers ref.
   year      = {2021},
 }
 
-@phdthesis{PeThesis:2020,
+@phdthesis{thesis/Martin/2020,
   author    = {Pierre{-}Etienne Martin},
   title     = {Fine-Grained Action Detection and Classification from Videos with
                Spatio-Temporal Convolutional Neural Networks. Application to Table
@@ -268,15 +295,6 @@ TODO: Update with baseline working note and task papers ref.
   biburl    = {https://dblp.org/rec/phd/hal/Martin20a.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }VERSION = {v1},
-}
-
-@inproceedings{mediaeval/Martin21/baseline,
-  author    = {Pierre{-}Etienne Martin},
-  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
-  booktitle = {MediaEval},
-   series    = {{CEUR} Workshop Proceedings},
-   publisher = {CEUR-WS.org},
-  year      = {2021}
 }
 ```
 
