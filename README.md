@@ -253,8 +253,14 @@ To cite this work, we invite you to include some previous work. Find the bibTex 
 
 ```
 @inproceedings{mediaeval/Martin/2022/overview,
-  author    = {Pierre{-}Etienne Martin},
-  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
+  author    = {Pierre{-}Etienne Martin and
+               Jordan Calandre and
+               Boris Mansencal and
+               Jenny Benois{-}Pineau and
+               Renaud P{\'{e}}teri and
+               Laurent Mascarilla and
+               Julien Morlier},
+  title     = {Sport Task: Fine Grained Action Detection and Classification of Table Tennis Strokes from Videos for MediaEval 2022},
   booktitle = {MediaEval},
    series    = {{CEUR} Workshop Proceedings},
    publisher = {CEUR-WS.org},
@@ -263,7 +269,7 @@ To cite this work, we invite you to include some previous work. Find the bibTex 
 
 @inproceedings{mediaeval/Martin/2022/baseline,
   author    = {Pierre{-}Etienne Martin},
-  title     = {Spatio-Temporal CNN baseline method for the Sports Video Task of MediaEval 2021 benchmark},
+  title     = {Baseline Method for the Sport Task of MediaEval 2022 Benchmark with 3D CNN using Attention Mechanism},
   booktitle = {MediaEval},
    series    = {{CEUR} Workshop Proceedings},
    publisher = {CEUR-WS.org},
