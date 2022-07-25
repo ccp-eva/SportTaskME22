@@ -21,9 +21,7 @@ The method is simple and is based on the following method using only RGB data:
 
 Pierre-Etienne Martin, Jenny Benois-Pineau, Renaud Péteri, Julien Morlier. 3D attention mechanism for fine-grained classification of table tennis strokes using a Twin Spatio-Temporal Convolutional Neural Networks. 25th International Conference on Pattern Recognition (ICPR2020), Jan 2021, Milano, Italy. [⟨hal-02977646⟩](https://hal.archives-ouvertes.fr/hal-02977646) - [Paper here](https://hal.archives-ouvertes.fr/hal-02977646/document)
 
-The data processing is trivial. The rgb frames are resized to a width of 640 and stacked together to form tensors of length 98 following the annotation boundaries. Data augmentation is used in order to start at different time point, perform some spatial transformation and increase variability. The tensros are fed to a simple Network using attention mechanisms. TODO: add image
-
-![](RGB-ASTCNN-Model.png)
+The data processing is trivial. The rgb frames are resized to a width of 320 and stacked together to form tensors of length 96 following the annotation boundaries. Data augmentation is used in order to start at different time point, perform some spatial transformation and increase variability. The tensors are fed to a simple Network using attention mechanisms.
 
 The training method uses nesterov momentum over a fixed amount of epoch. The learning rate is modified according to the loss evolution. The model with best performance on the validation loss is saved. Training method are similar for both subtasks.
 
