@@ -240,7 +240,7 @@ Thank you for your participation.
 
 After your submition, you will be asked to submit a Working Note paper to share your method, implementation and results. We strongly advice to make your implementation available on github and share its link. Please report the baseline results for comparison.
 
-Guideline to write your paper is available [there](https://docs.google.com/document/d/12uSn0rRYxa3buiFNEbpa46dKsHOyqV2PHU_joRGMHRw/edit?usp=sharing). Latex template can de dowlanded from [here](https://drive.google.com/file/d/1SMXWs-i4DKEUdblvzYaqvPuHLYHdBlQx/view?usp=sharing). Please update the shortitle command to fit out task with:
+Guideline to write your paper is available [there](https://docs.google.com/document/d/12uSn0rRYxa3buiFNEbpa46dKsHOyqV2PHU_joRGMHRw/edit?usp=sharing). Latex template can de downloaded from [here](https://drive.google.com/file/d/1SMXWs-i4DKEUdblvzYaqvPuHLYHdBlQx/view?usp=sharing). Please update the shortitle command to fit out task with:
 `\renewcommand{\shorttitle}{Sport Task}`
 
 Please cite the overview paper describing the task and the baseline paper. See next section.
