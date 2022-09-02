@@ -95,7 +95,7 @@ You may having trouble working with gpu and pytorch even with the installation s
 
 ## Method
 
-This implementation suggest two networks. Both networks are similar to the work "3D attention mechanisms in Twin Spatio-Temporal Convolutional Neural Networks. Application to  action classification in videos of table tennis games." by Pierre-Etienne Martin et al., ICPR 2021. They also follow similar training method: warm restart technique. The main divergence if the absence of Region Of Interest (ROI) which was computed from Optical Flow (OF) values.
+This implementation suggests two networks. Both networks are similar to the work "3D attention mechanisms in Twin Spatio-Temporal Convolutional Neural Networks. Application to  action classification in videos of table tennis games." by Pierre-Etienne Martin et al., ICPR 2021. They also follow similar training method: warm restart technique. The main divergence if the absence of Region Of Interest (ROI) which was computed from Optical Flow (OF) values.
 
 The two networs are the following:
 - V1, with succesive 4 conv+pool+attention layers and 2 conv+pool layers. All conv. layers use 3x3x3 filters. The first layers use 2x2x1 pooling filters (not pooling on the temporal doamin) and 2x2x2 pooling filters for the other layers.
@@ -141,7 +141,7 @@ Video candidates are purely succesive segments of frames without overlap and the
 
 #### With a sliding window
 
-Here a sliding window with step one ised on the test videos. The outputs are combined in order to make decision following similar window methods. The models from subtask 1 are also tested (V1 Class. and V2 Class. wrt Neg VS all and Neg VS sum(all) for decision).
+Here a sliding window with step one is used on the test videos. The outputs are combined in order to make decision following similar window methods. The models from subtask 1 are also tested (V1 Class. and V2 Class. wrt Neg VS all and Neg VS sum(all) for decision).
 
 ##### IoU metric
 
