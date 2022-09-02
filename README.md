@@ -4,24 +4,24 @@
 
 # Introduction
 
-Running since 2019, this task was focused during the first two years on classification of temporally segmented videos of single table tennis strokes.
+Running since 2019, this task was focused during the first two years on the classification of temporally segmented videos of single table tennis strokes.
 Since the third edition of the task, two subtasks have been proposed. The dataset also has been enriched this year with new and more diverse stroke samples.
 
 ***Subtask 1 :*** is a classification task: participants are required to build a classification system that automatically labels video segments according to a performed stroke. There are 20 possible stroke classes and an additional non-stroke class.
 
-***Subtask 2 :***  is a more challenging subtask proposed since last year: the goal here is to detect if a stroke has been performed, whatever its classes, and to extract its temporal boundaries. The aim is to be able to distinguish between moments of interest in a game (players performing strokes) from irrelevant moments (picking up the ball, having a break…). This subtask can be a preliminary step for later recognizing a stroke that has been performed.
+***Subtask 2 :***  is a more challenging subtask proposed since last year: the goal here is to detect if a stroke has been performed, whatever its class, and to extract its temporal boundaries. The aim is to be able to distinguish between moments of interest in a game (players performing strokes) from irrelevant moments (picking up the ball, having a break…). This subtask can be a preliminary step for later recognizing a stroke that has been performed.
  
 
 The organizers encourage the use of the method developed for subtask 1 to solve subtask 2. Participants are also invited to use the provided baseline as a starting point in their investigation. Finally, participants are encouraged to make their code public with their submission.
 
 # Baseline
-In order to help participants in their submission, to process videos, annotation files and deep learning techniques, we provide a baseline in this git which is formated to process the provided data by the task organizers.
+In order to help participants in their submission, to process videos, annotation files and deep learning techniques, we provide a baseline in this git which is formatted to process the provided data by the task organizers.
 
 The method is simple and is based on the following method using only RGB data:
 
 Pierre-Etienne Martin, Jenny Benois-Pineau, Renaud Péteri, Julien Morlier. 3D attention mechanism for fine-grained classification of table tennis strokes using a Twin Spatio-Temporal Convolutional Neural Networks. 25th International Conference on Pattern Recognition (ICPR2020), Jan 2021, Milano, Italy. [⟨hal-02977646⟩](https://hal.archives-ouvertes.fr/hal-02977646) - [Paper here](https://hal.archives-ouvertes.fr/hal-02977646/document)
 
-The data processing is trivial. The rgb frames are resized to a width of 320 and stacked together to form tensors of length 96 following the annotation boundaries. Data augmentation is used in order to start at different time point, perform some spatial transformation and increase variability. The tensors are fed to a simple Network using attention mechanisms.
+The data processing is trivial. The rgb frames are resized to a width of 320 and stacked together to form tensors of length 96 following the annotation boundaries. Data augmentation is used in order to start at different time points, perform some spatial transformation and increase variability. The tensors are fed to a simple Network using attention mechanisms.
 
 The training method uses nesterov momentum over a fixed amount of epoch. The learning rate is modified according to the loss evolution. The model with best performance on the validation loss is saved. Training method are similar for both subtasks.
 
