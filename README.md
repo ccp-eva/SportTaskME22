@@ -97,7 +97,7 @@ You may having trouble working with gpu and pytorch even with the installation s
 
 This implementation suggests two networks. Both networks are similar to the work "3D attention mechanisms in Twin Spatio-Temporal Convolutional Neural Networks. Application to  action classification in videos of table tennis games." by Pierre-Etienne Martin et al., ICPR 2021. They also follow similar training method: warm restart technique. The main divergence if the absence of Region Of Interest (ROI) which was computed from Optical Flow (OF) values.
 
-The two networs are the following:
+The two networks are the following:
 - V1, with succesive 4 conv+pool+attention layers and 2 conv+pool layers. All conv. layers use 3x3x3 filters. The first layers use 2x2x1 pooling filters (not pooling on the temporal doamin) and 2x2x2 pooling filters for the other layers.
 - V2, with 5 succesive conv+pool+attention layers. Conv. filters are of size 7x5x3 and pooling filters of size 4x3x2 for the first two layers. The rest uses 3x3x3 and 2x2x2 for conv. and pooling filters repectively.
 
