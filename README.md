@@ -166,7 +166,7 @@ Here a sliding window with step one is used on the test videos. The outputs are 
 | V2 Class. Neg VS sum(all) | .00145 | .00185 | .00261 |
 
 
-# Submittion
+# Submission
 
 ## Share you work with us
 
