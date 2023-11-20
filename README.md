@@ -14,6 +14,27 @@ Since the third edition of the task, two subtasks have been proposed. The datase
 
 The organizers encourage the use of the method developed for subtask 1 to solve subtask 2. Participants are also invited to use the provided baseline as a starting point in their investigation. Finally, participants are encouraged to make their code public with their submission.
 
+
+# Leaderboard
+
+## Classification subtask
+
+The performance of each model is presented in terms of accuracy. The ranking metric is the overall accuracy.
+
+| Team | Overall | Hand | Type | Type+Hand |
+| :---: | :---: | :---: | :---: | :---: |
+| Baseline | .864 | .907 | .932 | .907 |
+| Uni-Leipzig | **.873** | **.975** | **.966** | **.966** |
+
+## Detection subtask
+
+The detection subtask is evaluated with regard to the Global IoU metric and the mAP (highest is the best), mAP being the ranking metric.
+
+| Model	| IoU | mAP |
+| :---: | :---: | :---: |
+| Baseline | **.515** | **131** |
+| Uni-Leipzig | .349 | .110 |
+
 # Baseline
 In order to help participants in their submission, to process videos, annotation files and deep learning techniques, we provide a baseline in this git which is formatted to process the provided data by the task organizers.
 
